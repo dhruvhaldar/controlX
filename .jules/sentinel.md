@@ -1,0 +1,4 @@
+## 2024-05-18 - Input validation and exception leakage in MPCController
+**Vulnerability:** Missing input validation on prediction horizon (N) and sampling time (dt) in `MPCController`. Unbounded `N` could lead to excessive memory/CPU allocation during optimization (Resource Exhaustion). In addition, exception messages were leaked to the console during terminal cost computation.
+**Learning:** Simulation environments and scientific computing tools often lack input bounds, assuming the user will provide "reasonable" parameters. However, exposing such endpoints or allowing unbounded parameterization can lead to Denial of Service or resource exhaustion.
+**Prevention:** Always bound matrix dimensions, iteration counts, and prediction horizons to sensible limits, and suppress raw exception details in user-facing warnings.

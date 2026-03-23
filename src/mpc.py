@@ -22,6 +22,12 @@ class MPCController:
                 'umin': np.ndarray or float
                 'umax': np.ndarray or float
         """
+        # Security: Input validation to prevent resource exhaustion
+        if not isinstance(N, int) or N <= 0 or N > 1000:
+            raise ValueError("Prediction horizon N must be a positive integer <= 1000")
+        if dt <= 0:
+            raise ValueError("Sampling time dt must be positive")
+
         self.dt = dt
         self.N = N
         self.Q = Q
@@ -46,8 +52,9 @@ class MPCController:
             # Returns X, L, G
             X, _, _ = ct.dare(self.A, self.B, self.Q, self.R)
             self.P = X
-        except Exception as e:
-            print(f"Warning: Could not compute terminal cost P: {e}. Using Q.")
+        except Exception:
+            # Security: Do not leak exception details in console
+            print("Warning: Could not compute terminal cost P. Using Q.")
             self.P = self.Q
 
     def compute_control(self, x0):
