@@ -57,6 +57,41 @@ class MPCController:
             print("Warning: Could not compute terminal cost P. Using Q.")
             self.P = self.Q
 
+        # Setup parameterized problem for performance
+        self._setup_problem()
+
+    def _setup_problem(self):
+        """
+        Set up the parameterized CVXPY problem to avoid recompilation at each step.
+        """
+        self._x = cp.Variable((self.n_x, self.N + 1))
+        self._u = cp.Variable((self.n_u, self.N))
+        self._x0_param = cp.Parameter(self.n_x)
+
+        cost = 0
+        constraints = [self._x[:, 0] == self._x0_param]
+
+        for k in range(self.N):
+            cost += cp.quad_form(self._x[:, k], self.Q) + cp.quad_form(self._u[:, k], self.R)
+            constraints += [self._x[:, k+1] == self.A @ self._x[:, k] + self.B @ self._u[:, k]]
+
+            # Input constraints
+            if 'umin' in self.constraints:
+                constraints += [self._u[:, k] >= self.constraints['umin']]
+            if 'umax' in self.constraints:
+                constraints += [self._u[:, k] <= self.constraints['umax']]
+
+            # State constraints
+            if 'xmin' in self.constraints:
+                constraints += [self._x[:, k+1] >= self.constraints['xmin']]
+            if 'xmax' in self.constraints:
+                constraints += [self._x[:, k+1] <= self.constraints['xmax']]
+
+        # Terminal cost
+        cost += cp.quad_form(self._x[:, self.N], self.P)
+
+        self._prob = cp.Problem(cp.Minimize(cost), constraints)
+
     def compute_control(self, x0):
         """
         Compute the optimal control input for the current state x0.
@@ -68,38 +103,14 @@ class MPCController:
             u0 (np.ndarray): Optimal control input to apply.
             status (str): Solver status.
         """
-        # Variables
-        x = cp.Variable((self.n_x, self.N + 1))
-        u = cp.Variable((self.n_u, self.N))
-
-        cost = 0
-        constraints = [x[:, 0] == x0]
-
-        for k in range(self.N):
-            cost += cp.quad_form(x[:, k], self.Q) + cp.quad_form(u[:, k], self.R)
-            constraints += [x[:, k+1] == self.A @ x[:, k] + self.B @ u[:, k]]
-
-            # Input constraints
-            if 'umin' in self.constraints:
-                constraints += [u[:, k] >= self.constraints['umin']]
-            if 'umax' in self.constraints:
-                constraints += [u[:, k] <= self.constraints['umax']]
-
-            # State constraints
-            if 'xmin' in self.constraints:
-                constraints += [x[:, k+1] >= self.constraints['xmin']]
-            if 'xmax' in self.constraints:
-                constraints += [x[:, k+1] <= self.constraints['xmax']]
-
-        # Terminal cost
-        cost += cp.quad_form(x[:, self.N], self.P)
+        # Set the current state parameter
+        self._x0_param.value = x0
 
         # Solve
-        prob = cp.Problem(cp.Minimize(cost), constraints)
-        prob.solve(solver=cp.OSQP, verbose=False)
+        self._prob.solve(solver=cp.OSQP, warm_start=True, verbose=False)
 
-        if prob.status not in ["optimal", "optimal_inaccurate"]:
-            print(f"MPC Warning: Solver status: {prob.status}")
-            return np.zeros(self.n_u), prob.status
+        if self._prob.status not in ["optimal", "optimal_inaccurate"]:
+            print(f"MPC Warning: Solver status: {self._prob.status}")
+            return np.zeros(self.n_u), self._prob.status
 
-        return u[:, 0].value, prob.status
+        return self._u[:, 0].value, self._prob.status
