@@ -103,8 +103,23 @@ class MPCController:
             u0 (np.ndarray): Optimal control input to apply.
             status (str): Solver status.
         """
+        # Security: Input validation to prevent solver crashes or exceptions
+        try:
+            x0_arr = np.array(x0, dtype=float)
+        except (ValueError, TypeError):
+            print("MPC Error: Input state must be a valid numeric array or sequence.")
+            return np.zeros(self.n_u), "invalid_input"
+
+        if x0_arr.shape != (self.n_x,) and x0_arr.shape != (self.n_x, 1):
+            print(f"MPC Error: Invalid state dimension. Expected {self.n_x}, got {x0_arr.shape}")
+            return np.zeros(self.n_u), "invalid_dimension"
+
+        if not np.isfinite(x0_arr).all():
+            print("MPC Error: Input state contains NaN or infinite values.")
+            return np.zeros(self.n_u), "invalid_values"
+
         # Set the current state parameter
-        self._x0_param.value = x0
+        self._x0_param.value = x0_arr.flatten()
 
         # Solve
         self._prob.solve(solver=cp.OSQP, warm_start=True, verbose=False)
