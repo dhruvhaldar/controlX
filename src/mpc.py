@@ -122,10 +122,14 @@ class MPCController:
         self._x0_param.value = x0_arr.flatten()
 
         # Solve
-        self._prob.solve(solver=cp.OSQP, warm_start=True, verbose=False)
-
-        if self._prob.status not in ["optimal", "optimal_inaccurate"]:
-            print(f"MPC Warning: Solver status: {self._prob.status}")
-            return np.zeros(self.n_u), self._prob.status
+        try:
+            self._prob.solve(solver=cp.OSQP, warm_start=True, verbose=False)
+            if self._prob.status not in ["optimal", "optimal_inaccurate"]:
+                print(f"MPC Warning: Solver status: {self._prob.status}")
+                return np.zeros(self.n_u), self._prob.status
+        except Exception:
+            # Security: Prevent stack trace leakage on solver failure (e.g. DCPError)
+            print("MPC Error: Solver encountered an exception and failed securely.")
+            return np.zeros(self.n_u), "solver_error"
 
         return self._u[:, 0].value, self._prob.status

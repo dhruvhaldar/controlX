@@ -6,3 +6,8 @@
 **Vulnerability:** Unvalidated user inputs passed directly to cvxpy solver parameters in the MPC controller.
 **Learning:** Control algorithms utilizing underlying math optimization solvers (like OSQP via cvxpy) can crash violently or throw unhandled framework-level exceptions (e.g. `ValueError` inside cvxpy leaf expressions) when provided with NaNs, infinites, or mis-dimensioned arrays. This could lead to DoS or application crashes in production control systems.
 **Prevention:** Always sanitize and validate state arrays (e.g. using `np.isfinite` and shape checking) at the boundary before feeding them to optimization solvers. Fail securely by returning a safe control vector (like zeros) instead of allowing an exception to propagate.
+
+## 2025-03-26 - Prevent stack trace leakage on MPC CVXPY solver failure
+**Vulnerability:** If the CVXPY solver fails due to an invalid formulation (e.g. non-PSD weight matrices yielding a DCPError), the app crashes and logs full stack traces, which could leak system internals.
+**Learning:** CVXPY can throw various exceptions during problem solving if parameters are poorly conditioned or invalid. This needs to be caught defensively.
+**Prevention:** Wrap third-party solver executions (`_prob.solve()`) in a defensive `try...except` block, return safe fallback values (e.g., zeros for control inputs), and log generic status strings instead of raw exceptions.
