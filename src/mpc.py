@@ -1,6 +1,9 @@
 import numpy as np
 import cvxpy as cp
 import control as ct
+import logging
+
+logger = logging.getLogger(__name__)
 
 class MPCController:
     """
@@ -53,8 +56,8 @@ class MPCController:
             X, _, _ = ct.dare(self.A, self.B, self.Q, self.R)
             self.P = X
         except Exception:
-            # Security: Do not leak exception details in console
-            print("Warning: Could not compute terminal cost P. Using Q.")
+            # Security: Do not leak exception details in console, log securely
+            logger.warning("Could not compute terminal cost P. Using Q.")
             self.P = self.Q
 
         # Setup parameterized problem for performance
@@ -107,15 +110,15 @@ class MPCController:
         try:
             x0_arr = np.array(x0, dtype=float)
         except (ValueError, TypeError):
-            print("MPC Error: Input state must be a valid numeric array or sequence.")
+            logger.error("MPC Error: Input state must be a valid numeric array or sequence.")
             return np.zeros(self.n_u), "invalid_input"
 
         if x0_arr.shape != (self.n_x,) and x0_arr.shape != (self.n_x, 1):
-            print(f"MPC Error: Invalid state dimension. Expected {self.n_x}, got {x0_arr.shape}")
+            logger.error(f"MPC Error: Invalid state dimension. Expected {self.n_x}, got {x0_arr.shape}")
             return np.zeros(self.n_u), "invalid_dimension"
 
         if not np.isfinite(x0_arr).all():
-            print("MPC Error: Input state contains NaN or infinite values.")
+            logger.error("MPC Error: Input state contains NaN or infinite values.")
             return np.zeros(self.n_u), "invalid_values"
 
         # Set the current state parameter
@@ -125,7 +128,7 @@ class MPCController:
         self._prob.solve(solver=cp.OSQP, warm_start=True, verbose=False)
 
         if self._prob.status not in ["optimal", "optimal_inaccurate"]:
-            print(f"MPC Warning: Solver status: {self._prob.status}")
+            logger.warning(f"MPC Warning: Solver status: {self._prob.status}")
             return np.zeros(self.n_u), self._prob.status
 
         return self._u[:, 0].value, self._prob.status
