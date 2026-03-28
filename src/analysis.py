@@ -76,8 +76,9 @@ def relative_gain_array(G):
         RGA = G * G_inv.T
         return RGA
     except np.linalg.LinAlgError:
-        warnings.warn("Matrix is singular, RGA cannot be computed.")
-        return None
+        # Security: Fail securely by throwing a dedicated error instead of returning None.
+        # Returning None silently leads to downstream TypeError crashes and logic failures.
+        raise ValueError("Cannot compute RGA: System gain matrix is singular.")
 
 def system_gain(sys, omega=0):
     """

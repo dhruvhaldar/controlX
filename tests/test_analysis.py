@@ -49,3 +49,8 @@ def test_relative_gain_array():
     RGA = analysis.relative_gain_array(G)
     expected = np.array([[2, -1], [-1, 2]])
     assert np.allclose(RGA, expected)
+
+    # Singular matrix
+    G = np.array([[1, 1], [1, 1]])
+    with pytest.raises(ValueError, match="Cannot compute RGA: System gain matrix is singular."):
+        analysis.relative_gain_array(G)
