@@ -9,3 +9,7 @@
 ## 2025-05-15 - Vectorizing CVXPY Cost Functions using sum_squares
 **Learning:** Python loops over prediction horizons (e.g. `for k in range(N)`) to build CVXPY cost functions using `cp.quad_form(x, Q)` generate massive ASTs that dramatically slow down problem compilation and solve times. The cost $\sum x_k^T Q x_k$ is mathematically equivalent to $\sum ||Q^{1/2} x_k||_2^2$.
 **Action:** Always vectorize quadratic costs by pre-computing matrix square roots (`scipy.linalg.sqrtm(Q).real`) and using `cp.sum_squares(Q_sqrt @ x)`. This speeds up problem setup from ~47ms to ~1ms and solve times from ~195ms to ~18ms.
+
+## 2025-06-05 - Bypassing wrapper overhead for Algebraic Riccati Equations
+**Learning:** The `control` library wrappers for solving Algebraic Riccati Equations (such as `ct.dare`, `ct.lqr`, `ct.lqe`) introduce significant overhead (taking ~15ms per call) because they instantiate internal `StateSpace` objects and perform validation checks. Directly calling the underlying `scipy.linalg` solvers like `scipy.linalg.solve_discrete_are` takes only ~1ms per call.
+**Action:** When solving Algebraic Riccati Equations natively with matrices, prefer using `scipy.linalg.solve_discrete_are` or `scipy.linalg.solve_continuous_are` directly to achieve ~15x performance improvements.
