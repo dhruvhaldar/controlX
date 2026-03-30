@@ -27,8 +27,8 @@ class MPCController:
                 'umax': np.ndarray or float
         """
         # Security: Input validation to prevent resource exhaustion
-        if not isinstance(N, int) or N <= 0 or N > 1000:
-            raise ValueError("Prediction horizon N must be a positive integer <= 1000")
+        if not isinstance(N, int) or N <= 0:
+            raise ValueError("Prediction horizon N must be a positive integer")
         if dt <= 0:
             raise ValueError("Sampling time dt must be positive")
 
