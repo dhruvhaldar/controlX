@@ -136,7 +136,13 @@ class MPCController:
         self._x0_param.value = x0_arr.flatten()
 
         # Solve
-        self._prob.solve(solver=cp.OSQP, warm_start=True, verbose=False)
+        # Security: Wrap the solver call to prevent unhandled mathematical exceptions
+        # (e.g., from NaNs in constraints or numerical instabilities) from crashing the control loop.
+        try:
+            self._prob.solve(solver=cp.OSQP, warm_start=True, verbose=False)
+        except Exception:
+            logger.error("MPC Error: Solver encountered an unhandled exception.")
+            return np.zeros(self.n_u), "solver_error"
 
         if self._prob.status not in ["optimal", "optimal_inaccurate"]:
             logger.warning(f"MPC Warning: Solver status: {self._prob.status}")
