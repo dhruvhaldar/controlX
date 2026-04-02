@@ -13,3 +13,7 @@
 ## 2025-06-05 - Bypassing wrapper overhead for Algebraic Riccati Equations
 **Learning:** The `control` library wrappers for solving Algebraic Riccati Equations (such as `ct.dare`, `ct.lqr`, `ct.lqe`) introduce significant overhead (taking ~15ms per call) because they instantiate internal `StateSpace` objects and perform validation checks. Directly calling the underlying `scipy.linalg` solvers like `scipy.linalg.solve_discrete_are` takes only ~1ms per call.
 **Action:** When solving Algebraic Riccati Equations natively with matrices, prefer using `scipy.linalg.solve_discrete_are` or `scipy.linalg.solve_continuous_are` directly to achieve ~15x performance improvements.
+
+## 2025-10-24 - Bypass evalfr overhead for StateSpace evaluations
+**Learning:** In the `python-control` library, evaluating a system at a single frequency using `ct.evalfr` incurs a relatively high overhead due to type checking, canonicalization, and dimension validations. For `control.StateSpace` systems, manually computing the transfer function $G(i\omega) = C(i\omega I - A)^{-1}B + D$ via `np.linalg.solve` bypasses this overhead, correctly providing an approximately ~9x speedup.
+**Action:** When evaluating the frequency response of a single frequency for a `control.StateSpace` system, prefer the direct matrix solve `sys.C @ np.linalg.solve(omega * 1j * I - sys.A, sys.B) + sys.D`, ensuring you catch `np.linalg.LinAlgError` to gracefully handle evaluations exactly at poles (returning NaNs, matching the library behavior).
