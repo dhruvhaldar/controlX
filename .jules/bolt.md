@@ -13,3 +13,7 @@
 ## 2025-06-05 - Bypassing wrapper overhead for Algebraic Riccati Equations
 **Learning:** The `control` library wrappers for solving Algebraic Riccati Equations (such as `ct.dare`, `ct.lqr`, `ct.lqe`) introduce significant overhead (taking ~15ms per call) because they instantiate internal `StateSpace` objects and perform validation checks. Directly calling the underlying `scipy.linalg` solvers like `scipy.linalg.solve_discrete_are` takes only ~1ms per call.
 **Action:** When solving Algebraic Riccati Equations natively with matrices, prefer using `scipy.linalg.solve_discrete_are` or `scipy.linalg.solve_continuous_are` directly to achieve ~15x performance improvements.
+
+## 2025-06-15 - Vectorizing Frequency Response for StateSpace Systems
+**Learning:** `control.StateSpace.frequency_response` is slow for arrays of frequencies when the `slycot` dependency is missing, as it falls back to a slow Python loop evaluating polynomials via Horner's method.
+**Action:** For performance-critical frequency evaluations of StateSpace systems, manually compute the frequency response using vectorized NumPy array operations `C @ np.linalg.inv(sI - A) @ B + D`. Be careful to handle continuous vs discrete time systems correctly, and fallback to `sys.frequency_response` if `np.linalg.inv` fails due to a `LinAlgError` (e.g., when a frequency exactly hits a pole).

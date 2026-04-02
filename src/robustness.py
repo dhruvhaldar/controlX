@@ -74,18 +74,52 @@ def calculate_hinf_norm(sys, omega=None):
 
     # ⚡ Bolt Optimization: Replace slow python loop with vectorized batched SVD.
     # Calculates frequency response for all frequencies simultaneously.
-    # Provides ~6-90x speedup depending on system dimensions.
-    resp = sys.frequency_response(omega).complex
+    # Avoids sys.frequency_response overhead for StateSpace objects (which relies
+    # on slow Horner evaluation fallback without slycot) by directly computing
+    # C @ inv(sI - A) @ B + D over the frequency array.
+    omega_arr = np.atleast_1d(omega)
 
-    if resp.ndim == 1:
-        # SISO case: resp is 1D array of complex values
-        max_sv = np.max(np.abs(resp))
+    if isinstance(sys, ct.StateSpace):
+        if sys.dt is None or sys.dt == 0:
+            s = 1j * omega_arr
+        else:
+            s = np.exp(1j * omega_arr * sys.dt)
+
+        I = np.eye(sys.nstates)
+        sI_minus_A = s[:, np.newaxis, np.newaxis] * I - sys.A
+
+        try:
+            inv_sI_minus_A = np.linalg.inv(sI_minus_A)
+            # resp_T shape: (freqs, outputs, inputs)
+            resp_T = sys.C @ inv_sI_minus_A @ sys.B + sys.D
+
+            if sys.ninputs == 1 and sys.noutputs == 1:
+                max_sv = np.max(np.abs(resp_T))
+            else:
+                svs = np.linalg.svd(resp_T, compute_uv=False)
+                max_sv = np.max(svs)
+        except np.linalg.LinAlgError:
+            # Fallback for pole collision
+            resp = sys.frequency_response(omega_arr).complex
+
+            if resp.ndim == 1:
+                max_sv = np.max(np.abs(resp))
+            else:
+                resp_T = np.transpose(resp, (2, 0, 1))
+                svs = np.linalg.svd(resp_T, compute_uv=False)
+                max_sv = np.max(svs)
     else:
-        # MIMO case: resp is (outputs, inputs, frequencies)
-        # Transpose to (frequencies, outputs, inputs) for batched svd
-        resp_T = np.transpose(resp, (2, 0, 1))
-        svs = np.linalg.svd(resp_T, compute_uv=False)
-        max_sv = np.max(svs)
+        resp = sys.frequency_response(omega_arr).complex
+
+        if resp.ndim == 1:
+            # SISO case: resp is 1D array of complex values
+            max_sv = np.max(np.abs(resp))
+        else:
+            # MIMO case: resp is (outputs, inputs, frequencies)
+            # Transpose to (frequencies, outputs, inputs) for batched svd
+            resp_T = np.transpose(resp, (2, 0, 1))
+            svs = np.linalg.svd(resp_T, compute_uv=False)
+            max_sv = np.max(svs)
 
     return float(max_sv)
 
