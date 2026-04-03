@@ -34,6 +34,17 @@ class MPCController:
 
         self.dt = dt
         self.N = N
+
+        # Security: Validate weight matrices to prevent math/solver exceptions
+        Q = np.atleast_2d(Q)
+        R = np.atleast_2d(R)
+        if not np.all(np.isfinite(Q)) or not np.all(np.isfinite(R)):
+            raise ValueError("Weight matrices Q and R must contain finite values")
+        if Q.shape[0] != Q.shape[1] or not np.allclose(Q, Q.T) or np.any(np.linalg.eigvalsh(Q) < -1e-8):
+            raise ValueError("State weighting matrix Q must be symmetric positive semi-definite")
+        if R.shape[0] != R.shape[1] or not np.allclose(R, R.T) or np.any(np.linalg.eigvalsh(R) < -1e-8):
+            raise ValueError("Input weighting matrix R must be symmetric positive semi-definite")
+
         self.Q = Q
         self.R = R
         self.constraints = constraints if constraints else {}

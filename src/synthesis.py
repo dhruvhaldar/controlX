@@ -27,6 +27,14 @@ def design_lqr(sys, Q, R):
     Q = np.atleast_2d(Q)
     R = np.atleast_2d(R)
 
+    # Security: Validate weight matrices to prevent unhandled math exceptions
+    if not np.all(np.isfinite(Q)) or not np.all(np.isfinite(R)):
+        raise ValueError("Weight matrices Q and R must contain finite values")
+    if Q.shape[0] != Q.shape[1] or not np.allclose(Q, Q.T) or np.any(np.linalg.eigvalsh(Q) < -1e-8):
+        raise ValueError("State weighting matrix Q must be symmetric positive semi-definite")
+    if R.shape[0] != R.shape[1] or not np.allclose(R, R.T) or np.any(np.linalg.eigvalsh(R) < -1e-8):
+        raise ValueError("Input weighting matrix R must be symmetric positive semi-definite")
+
     # ⚡ Bolt Optimization: Use scipy.linalg.solve_continuous_are/solve_discrete_are instead of control.lqr/dlqr
     # This bypasses the control library's validation and object creation overhead, providing a ~15x speedup.
     if sys.dt is None or sys.dt == 0:
@@ -68,6 +76,14 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
     # Convert scalar weights to 2D arrays to maintain API compatibility
     Qn = np.atleast_2d(Qn)
     Rn = np.atleast_2d(Rn)
+
+    # Security: Validate weight matrices to prevent unhandled math exceptions
+    if not np.all(np.isfinite(Qn)) or not np.all(np.isfinite(Rn)):
+        raise ValueError("Noise covariance matrices Qn and Rn must contain finite values")
+    if Qn.shape[0] != Qn.shape[1] or not np.allclose(Qn, Qn.T) or np.any(np.linalg.eigvalsh(Qn) < -1e-8):
+        raise ValueError("Process noise covariance Qn must be symmetric positive semi-definite")
+    if Rn.shape[0] != Rn.shape[1] or not np.allclose(Rn, Rn.T) or np.any(np.linalg.eigvalsh(Rn) < -1e-8):
+        raise ValueError("Measurement noise covariance Rn must be symmetric positive semi-definite")
 
     # lqe takes (A, G, C, Qn, Rn)
     # The original control.lqe explicitly solves the continuous-time problem
