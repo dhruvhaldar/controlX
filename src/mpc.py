@@ -32,6 +32,8 @@ class MPCController:
         if dt <= 0:
             raise ValueError("Sampling time dt must be positive")
 
+        self._validate_weight_matrix(Q, "Q")
+        self._validate_weight_matrix(R, "R")
         self.dt = dt
         self.N = N
         self.Q = Q
@@ -64,6 +66,18 @@ class MPCController:
 
         # Setup parameterized problem for performance
         self._setup_problem()
+
+    @staticmethod
+    def _validate_weight_matrix(matrix, name="Matrix"):
+        matrix = np.atleast_2d(matrix)
+        if not np.isfinite(matrix).all():
+            raise ValueError(f"{name} must be finite")
+        if matrix.shape[0] != matrix.shape[1]:
+            raise ValueError(f"{name} must be square")
+        if not np.allclose(matrix, matrix.T):
+            raise ValueError(f"{name} must be symmetric")
+        if np.linalg.eigvalsh(matrix)[0] < -1e-8:
+            raise ValueError(f"{name} must be positive semi-definite")
 
     def _setup_problem(self):
         """

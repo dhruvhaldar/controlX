@@ -2,6 +2,17 @@ import numpy as np
 import control as ct
 import scipy.linalg
 
+def _validate_weight_matrix(matrix, name="Matrix"):
+    matrix = np.atleast_2d(matrix)
+    if not np.isfinite(matrix).all():
+        raise ValueError(f"{name} must be finite")
+    if matrix.shape[0] != matrix.shape[1]:
+        raise ValueError(f"{name} must be square")
+    if not np.allclose(matrix, matrix.T):
+        raise ValueError(f"{name} must be symmetric")
+    if np.linalg.eigvalsh(matrix)[0] < -1e-8:
+        raise ValueError(f"{name} must be positive semi-definite")
+
 def design_lqr(sys, Q, R):
     """
     Design an LQR controller for the system.
@@ -26,6 +37,8 @@ def design_lqr(sys, Q, R):
     # Convert scalar weights to 2D arrays to maintain API compatibility
     Q = np.atleast_2d(Q)
     R = np.atleast_2d(R)
+    _validate_weight_matrix(Q, "Q")
+    _validate_weight_matrix(R, "R")
 
     # ⚡ Bolt Optimization: Use scipy.linalg.solve_continuous_are/solve_discrete_are instead of control.lqr/dlqr
     # This bypasses the control library's validation and object creation overhead, providing a ~15x speedup.
@@ -68,6 +81,8 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
     # Convert scalar weights to 2D arrays to maintain API compatibility
     Qn = np.atleast_2d(Qn)
     Rn = np.atleast_2d(Rn)
+    _validate_weight_matrix(Qn, "Qn")
+    _validate_weight_matrix(Rn, "Rn")
 
     # lqe takes (A, G, C, Qn, Rn)
     # The original control.lqe explicitly solves the continuous-time problem
