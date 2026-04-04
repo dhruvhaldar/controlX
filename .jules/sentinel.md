@@ -18,3 +18,8 @@
 **Vulnerability:** Artificial cap on array sizes (N <= 1000) deep inside the core MPC controller mathematical utility.
 **Learning:** Do not artificially cap array sizes deep inside core mathematical utilities or numerical functions to prevent DoS. This breaks legitimate scientific use cases and is considered 'security theater'. Input validation for resource exhaustion must happen at the application API or user-input boundary.
 **Prevention:** Ensure that any resource exhaustion checks are performed at the appropriate boundary layer, rather than embedded within core library code.
+
+## 2024-05-24 - Add Matrix PSD Validation
+**Vulnerability:** Missing validation for weight/covariance matrices in MPC and synthesis functions allows non-positive semi-definite or invalid matrices, which can silently cause data corruption when computing square roots using scipy.linalg.sqrtm().real.
+**Learning:** The `.real` attribute drops complex components arising from non-PSD matrices, hiding fundamental mathematical errors instead of failing securely.
+**Prevention:** Always explicitly check matrices for finiteness, squareness, symmetry, and positive semi-definiteness (e.g., using `np.linalg.eigvalsh(matrix) >= -1e-8`) before processing.
