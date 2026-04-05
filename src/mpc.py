@@ -6,6 +6,18 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def _validate_weight_matrix(mat, name):
+    mat = np.atleast_2d(mat)
+    if not np.all(np.isfinite(mat)):
+        raise ValueError(f"{name} must be finite")
+    if mat.shape[0] != mat.shape[1]:
+        raise ValueError(f"{name} must be square")
+    if not np.allclose(mat, mat.T):
+        raise ValueError(f"{name} must be symmetric")
+    if not np.all(np.linalg.eigvalsh(mat) >= -1e-8):
+        raise ValueError(f"{name} must be positive semi-definite")
+    return mat
+
 class MPCController:
     """
     Model Predictive Controller.
@@ -34,8 +46,8 @@ class MPCController:
 
         self.dt = dt
         self.N = N
-        self.Q = Q
-        self.R = R
+        self.Q = _validate_weight_matrix(Q, "Q")
+        self.R = _validate_weight_matrix(R, "R")
         self.constraints = constraints if constraints else {}
 
         # Discretize system if continuous
