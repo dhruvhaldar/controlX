@@ -35,7 +35,7 @@ def test_kalman_invalid_matrix():
     sys = ct.ss([[-1]], [[1]], [[1]], [[0]])
     Qn = np.array([[1, 2], [3, 4]]) # Not symmetric
     Rn = np.array([[1]])
-    with pytest.raises(ValueError, match="Qn must be symmetric"):
+    with pytest.raises(ValueError, match="Qn must be symmetric|Qn must have shape"):
         synthesis.design_kalman_filter(sys, Qn, Rn)
 
     Qn = np.array([[1]])
@@ -53,3 +53,25 @@ def test_lqg_design():
     assert ctrl.ninputs == 1
     assert ctrl.noutputs == 1
     assert ctrl.nstates == 1
+
+def test_synthesis_invalid_dimension():
+    # sys is 1-state, 1-input, 1-output
+    sys = ct.ss([[-1]], [[1]], [[1]], [[0]])
+
+    Q_invalid = np.eye(2)
+    R_invalid = np.eye(2)
+
+    with pytest.raises(ValueError, match="Q must have shape"):
+        synthesis.design_lqr(sys, Q_invalid, np.eye(1))
+
+    with pytest.raises(ValueError, match="R must have shape"):
+        synthesis.design_lqr(sys, np.eye(1), R_invalid)
+
+    Qn_invalid = np.eye(2)
+    Rn_invalid = np.eye(2)
+
+    with pytest.raises(ValueError, match="Qn must have shape"):
+        synthesis.design_kalman_filter(sys, Qn_invalid, np.eye(1))
+
+    with pytest.raises(ValueError, match="Rn must have shape"):
+        synthesis.design_kalman_filter(sys, np.eye(1), Rn_invalid)

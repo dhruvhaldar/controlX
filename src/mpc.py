@@ -6,7 +6,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def _validate_matrix(matrix, name="Matrix"):
+def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     """
     Validate that a matrix is finite, square, and symmetric positive semi-definite.
     """
@@ -15,6 +15,8 @@ def _validate_matrix(matrix, name="Matrix"):
         raise ValueError(f"{name} must contain only finite numbers.")
     if matrix.shape[0] != matrix.shape[1]:
         raise ValueError(f"{name} must be a square matrix.")
+    if expected_shape is not None and matrix.shape != expected_shape:
+        raise ValueError(f"{name} must have shape {expected_shape}.")
     if not np.allclose(matrix, matrix.T):
         raise ValueError(f"{name} must be symmetric.")
     if np.min(np.linalg.eigvalsh(matrix)) < -1e-8:
@@ -51,9 +53,12 @@ class MPCController:
         self.dt = dt
         self.N = N
 
+        self.n_x = sys.nstates
+        self.n_u = sys.ninputs
+
         # Security: Validate matrices to prevent silent data corruption later
-        self.Q = _validate_matrix(Q, "Q")
-        self.R = _validate_matrix(R, "R")
+        self.Q = _validate_matrix(Q, expected_shape=(self.n_x, self.n_x), name="Q")
+        self.R = _validate_matrix(R, expected_shape=(self.n_u, self.n_u), name="R")
         self.constraints = constraints if constraints else {}
 
         # Discretize system if continuous
@@ -64,8 +69,6 @@ class MPCController:
 
         self.A = self.sys_d.A
         self.B = self.sys_d.B
-        self.n_x = self.sys_d.nstates
-        self.n_u = self.sys_d.ninputs
 
         # Compute terminal cost P using DARE (optional, often P=Q is used or solution to Riccati)
         # Solve P = A'PA - A'PB(R + B'PB)^-1 B'PA + Q

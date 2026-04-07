@@ -2,7 +2,7 @@ import numpy as np
 import control as ct
 import scipy.linalg
 
-def _validate_matrix(matrix, name="Matrix"):
+def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     """
     Validate that a matrix is finite, square, and symmetric positive semi-definite.
     """
@@ -11,6 +11,8 @@ def _validate_matrix(matrix, name="Matrix"):
         raise ValueError(f"{name} must contain only finite numbers.")
     if matrix.shape[0] != matrix.shape[1]:
         raise ValueError(f"{name} must be a square matrix.")
+    if expected_shape is not None and matrix.shape != expected_shape:
+        raise ValueError(f"{name} must have shape {expected_shape}.")
     if not np.allclose(matrix, matrix.T):
         raise ValueError(f"{name} must be symmetric.")
     if np.min(np.linalg.eigvalsh(matrix)) < -1e-8:
@@ -40,8 +42,8 @@ def design_lqr(sys, Q, R):
         raise TypeError("System must be a control.StateSpace object. State matrices (Q, Qn) cannot be applied to arbitrary transfer function realizations.")
 
     # Security: Validate matrices to prevent silent data corruption later
-    Q = _validate_matrix(Q, "Q")
-    R = _validate_matrix(R, "R")
+    Q = _validate_matrix(Q, expected_shape=(sys.nstates, sys.nstates), name="Q")
+    R = _validate_matrix(R, expected_shape=(sys.ninputs, sys.ninputs), name="R")
 
     # ⚡ Bolt Optimization: Use scipy.linalg.solve_continuous_are/solve_discrete_are instead of control.lqr/dlqr
     # This bypasses the control library's validation and object creation overhead, providing a ~15x speedup.
@@ -81,8 +83,8 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
         G = sys.B
 
     # Security: Validate matrices to prevent silent data corruption later
-    Qn = _validate_matrix(Qn, "Qn")
-    Rn = _validate_matrix(Rn, "Rn")
+    Qn = _validate_matrix(Qn, expected_shape=(G.shape[1], G.shape[1]), name="Qn")
+    Rn = _validate_matrix(Rn, expected_shape=(sys.noutputs, sys.noutputs), name="Rn")
 
     # lqe takes (A, G, C, Qn, Rn)
     # The original control.lqe explicitly solves the continuous-time problem

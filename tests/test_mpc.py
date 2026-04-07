@@ -52,7 +52,7 @@ def test_mpc_invalid_matrix():
     dt = 0.1
     constraints = {'umin': -1, 'umax': 1}
 
-    with pytest.raises(ValueError, match="Q must be a square matrix|Q must be symmetric|R must be positive semi-definite"):
+    with pytest.raises(ValueError, match="Q must be a square matrix|Q must be symmetric|R must be positive semi-definite|Q must have shape"):
         controller = mpc.MPCController(sys, Q, R, N, dt, constraints)
 
     Q_valid = np.array([[1]])
@@ -63,3 +63,18 @@ def test_mpc_invalid_matrix():
     R_valid = np.array([[1]])
     with pytest.raises(ValueError, match="Q must contain only finite numbers"):
         controller = mpc.MPCController(sys, Q_inf, R_valid, N, dt, constraints)
+
+def test_mpc_invalid_dimension():
+    # sys is 1-state, 1-input
+    sys = ct.ss([[-1]], [[1]], [[1]], [[0]])
+    Q_invalid = np.eye(2) # Incorrect shape, should be (1, 1)
+    R_invalid = np.eye(2) # Incorrect shape, should be (1, 1)
+    N = 10
+    dt = 0.1
+    constraints = {'umin': -1, 'umax': 1}
+
+    with pytest.raises(ValueError, match="Q must have shape"):
+        mpc.MPCController(sys, Q_invalid, np.eye(1), N, dt, constraints)
+
+    with pytest.raises(ValueError, match="R must have shape"):
+        mpc.MPCController(sys, np.eye(1), R_invalid, N, dt, constraints)
