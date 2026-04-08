@@ -21,3 +21,7 @@
 ## 2026-04-07 - Replace np.linalg.inv with np.linalg.solve
 **Learning:** Using `np.linalg.inv(A) @ B` is slower and less numerically stable than `np.linalg.solve(A, B)`. For batched frequency response evaluation, broadcasting `B` and using `np.linalg.solve` gives a measurable performance improvement.
 **Action:** When computing `C @ inv(sI - A) @ B + D`, always use `X = np.linalg.solve(sI - A, B)` and then `C @ X + D`.
+
+## 2026-04-08 - Fast Frequency Response Evaluation via Spectral Decomposition
+**Learning:** The batched matrix solve `np.linalg.solve(sI - A, B)` for frequency response is $O(N^3)$ per frequency point. When evaluating a state space model over thousands of frequencies (e.g. for singular value plots or H-infinity norms), this matrix inversion bottleneck severely limits performance.
+**Action:** When evaluating frequency response across many points, first diagonalize `A` (`eigvals, V = np.linalg.eig(A)`). If `V` is well-conditioned (e.g., `np.linalg.cond(V) < 1e10`), replace the batched matrix solve with an $O(N)$ scalar division: scale `(C @ V)` and `(inv(V) @ B)` by `1.0 / (s - eigvals)`. This reduces the frequency-dependent logic to vector math, speeding up the calculation substantially (by ~2.5x to ~10x depending on matrix size).
