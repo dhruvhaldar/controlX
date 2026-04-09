@@ -44,6 +44,11 @@ class MPCController:
                 'umin': np.ndarray or float
                 'umax': np.ndarray or float
         """
+        # Security: Explicit type enforcement to fail securely. State weights cannot be applied
+        # to arbitrary transfer function realizations, which leads to mathematically unsound logic.
+        if not isinstance(sys, ct.StateSpace):
+            raise TypeError("System must be a control.StateSpace object. State matrices (Q, R) cannot be applied to arbitrary transfer function realizations.")
+
         # Security: Input validation to prevent resource exhaustion
         if not isinstance(N, int) or N <= 0:
             raise ValueError("Prediction horizon N must be a positive integer")

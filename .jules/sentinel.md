@@ -22,3 +22,7 @@
 **Vulnerability:** Missing validation for weight matrices in MPC and synthesis functions.
 **Learning:** Invalid weight matrices lead to silent data corruption when calculating square roots.
 **Prevention:** Validate weight and covariance matrices to ensure they are finite, square, and positive semi-definite before processing.
+## 2025-02-18 - Prevent Insecure Mathematical Operations in MPCController
+**Vulnerability:** The `MPCController` class permitted inputs of type `TransferFunction`. This type coercion leads to a mathematically dangerous condition where user-provided state weight matrices (`Q`, `R`) are applied to an arbitrary state realization. This allows logical data corruption and produces unsafe controllers without any explicit warning to the user.
+**Learning:** Functions that require explicit structural knowledge (like physical state variables) must strictly validate object types. Coercing objects to simplify APIs (e.g. converting TFs to SS) in scientific contexts can destroy the mathematical meaning of parallel inputs (like weight matrices that specifically penalize distinct physical states).
+**Prevention:** Strictly enforce `control.StateSpace` inputs in control synthesis and MPC functions that take state-dependent matrices. If an invalid type like `TransferFunction` is supplied, fail securely by explicitly raising a `TypeError` explaining that state weights cannot be applied to arbitrary realizations.

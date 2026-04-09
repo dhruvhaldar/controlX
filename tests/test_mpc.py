@@ -64,6 +64,17 @@ def test_mpc_invalid_matrix():
     with pytest.raises(ValueError, match="Q must contain only finite numbers"):
         controller = mpc.MPCController(sys, Q_inf, R_valid, N, dt, constraints)
 
+def test_mpc_invalid_system_type():
+    sys = ct.tf([1], [1, 1])
+    Q = np.array([[1]])
+    R = np.array([[1]])
+    N = 10
+    dt = 0.1
+    constraints = {'umin': -1, 'umax': 1}
+
+    with pytest.raises(TypeError, match="System must be a control.StateSpace object"):
+        mpc.MPCController(sys, Q, R, N, dt, constraints)
+
 def test_mpc_invalid_dimension():
     # sys is 1-state, 1-input
     sys = ct.ss([[-1]], [[1]], [[1]], [[0]])
