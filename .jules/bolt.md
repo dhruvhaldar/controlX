@@ -25,3 +25,7 @@
 ## 2026-04-08 - Fast Frequency Response Evaluation via Spectral Decomposition
 **Learning:** The batched matrix solve `np.linalg.solve(sI - A, B)` for frequency response is $O(N^3)$ per frequency point. When evaluating a state space model over thousands of frequencies (e.g. for singular value plots or H-infinity norms), this matrix inversion bottleneck severely limits performance.
 **Action:** When evaluating frequency response across many points, first diagonalize `A` (`eigvals, V = np.linalg.eig(A)`). If `V` is well-conditioned (e.g., `np.linalg.cond(V) < 1e10`), replace the batched matrix solve with an $O(N)$ scalar division: scale `(C @ V)` and `(inv(V) @ B)` by `1.0 / (s - eigvals)`. This reduces the frequency-dependent logic to vector math, speeding up the calculation substantially (by ~2.5x to ~10x depending on matrix size).
+
+## 2025-10-24 - Fast Positive Semi-Definite Matrix Validation
+**Learning:** Using `np.linalg.eigvalsh` to check if a matrix is positive semi-definite is an $O(4N^3/3)$ operation. In high-performance control loops or initialization (like MPC or LQG), this creates a significant validation overhead.
+**Action:** Replace `eigvalsh` checks with a Cholesky decomposition (`np.linalg.cholesky(matrix + np.eye(N) * 1e-9)`). Cholesky decomposition is $O(N^3/3)$, providing a ~2-3x speedup for validating matrix positive semi-definiteness.

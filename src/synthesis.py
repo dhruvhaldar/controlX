@@ -15,7 +15,14 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
         raise ValueError(f"{name} must have shape {expected_shape}.")
     if not np.allclose(matrix, matrix.T):
         raise ValueError(f"{name} must be symmetric.")
-    if np.min(np.linalg.eigvalsh(matrix)) < -1e-8:
+
+    # ⚡ Bolt Optimization: Fast positive semi-definite check via Cholesky decomposition.
+    # np.linalg.cholesky is O(N^3/3), while np.linalg.eigvalsh is O(4N^3/3),
+    # providing a significant speedup for large matrices.
+    try:
+        # Add a small epsilon for numerical stability with semi-definite matrices
+        np.linalg.cholesky(matrix + np.eye(matrix.shape[0]) * 1e-9)
+    except np.linalg.LinAlgError:
         raise ValueError(f"{name} must be positive semi-definite.")
     return matrix
 
