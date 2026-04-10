@@ -73,6 +73,25 @@ class MPCController:
         self.R = _validate_matrix(R, expected_shape=(self.n_u, self.n_u), name="R")
         self.constraints = constraints if constraints else {}
 
+        # Security: Validate constraint inputs
+        for key in ['umin', 'umax']:
+            if key in self.constraints:
+                val = np.array(self.constraints[key], dtype=float)
+                if not np.isfinite(val).all():
+                    raise ValueError(f"Constraint {key} must contain only finite numbers.")
+                if val.ndim > 1 or (val.ndim == 1 and val.shape[0] != self.n_u and val.shape[0] != 1):
+                    raise ValueError(f"Constraint {key} has invalid shape.")
+                self.constraints[key] = val
+
+        for key in ['xmin', 'xmax']:
+            if key in self.constraints:
+                val = np.array(self.constraints[key], dtype=float)
+                if not np.isfinite(val).all():
+                    raise ValueError(f"Constraint {key} must contain only finite numbers.")
+                if val.ndim > 1 or (val.ndim == 1 and val.shape[0] != self.n_x and val.shape[0] != 1):
+                    raise ValueError(f"Constraint {key} has invalid shape.")
+                self.constraints[key] = val
+
         # Discretize system if continuous
         if sys.dt is None or sys.dt == 0:
             self.sys_d = ct.c2d(sys, dt)
