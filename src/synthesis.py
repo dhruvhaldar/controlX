@@ -6,6 +6,11 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     """
     Validate that a matrix is finite, square, and symmetric positive semi-definite.
     """
+    try:
+        matrix = np.array(matrix, dtype=float)
+    except (ValueError, TypeError):
+        raise ValueError(f"{name} must be a numeric array.")
+
     matrix = np.atleast_2d(matrix)
     if not np.isfinite(matrix).all():
         raise ValueError(f"{name} must contain only finite numbers.")
