@@ -148,9 +148,10 @@ class MPCController:
         # ⚡ Bolt Optimization: Vectorize CVXPY cost function over the prediction horizon
         # Replacing the Python loop and cp.quad_form with cp.sum_squares of matrix square roots
         # reduces problem compilation time significantly and improves solve time.
-        Q_sqrt = scipy.linalg.sqrtm(self.Q).real
-        R_sqrt = scipy.linalg.sqrtm(self.R).real
-        P_sqrt = scipy.linalg.sqrtm(self.P).real
+        # ⚡ Bolt Optimization: Replace slow scipy.linalg.sqrtm with fast np.linalg.cholesky.
+        Q_sqrt = np.linalg.cholesky(self.Q + np.eye(self.Q.shape[0]) * 1e-9).T
+        R_sqrt = np.linalg.cholesky(self.R + np.eye(self.R.shape[0]) * 1e-9).T
+        P_sqrt = np.linalg.cholesky(self.P + np.eye(self.P.shape[0]) * 1e-9).T
 
         cost = (cp.sum_squares(Q_sqrt @ self._x[:, :-1]) +
                 cp.sum_squares(R_sqrt @ self._u) +

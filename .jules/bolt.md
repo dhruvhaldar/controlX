@@ -33,3 +33,7 @@
 ## 2026-11-20 - Fast Condition Number Validation
 **Learning:** The default `np.linalg.cond(V)` computes the 2-norm condition number which requires a full Singular Value Decomposition (SVD), an $O(N^3)$ operation. In high-performance loops evaluating frequency responses, this condition check can become a bottleneck. Furthermore, `np.einsum` can replace broadcasting of intermediate arrays for final matrix summations to save time and memory.
 **Action:** When validating matrix condition numbers for numerical stability (e.g., before diagonalization), always use `np.linalg.cond(V, 1)`, which computes the 1-norm much faster. Additionally, use `np.einsum('ok,fk,ki->foi', CV, inv_s_minus_eig, invVB)` instead of scaled intermediate array broadcasting.
+
+## 2025-05-16 - Replace scipy.linalg.sqrtm with np.linalg.cholesky for CVXPY sum_squares
+**Learning:** When formulating CVXPY costs using `cp.sum_squares(Q_sqrt @ x)`, computing the matrix square root `Q_sqrt` via `scipy.linalg.sqrtm` is slow (~0.59s for 100 iterations of a 100x100 matrix) because it uses the Schur decomposition. Since cost weighting matrices are positive semi-definite, `np.linalg.cholesky(Q).T` is mathematically equivalent for $x^T Q x = ||L^T x||_2^2$ and provides a massive speedup (~0.008s for 100 iterations).
+**Action:** When vectorizing quadratic cost functions with `cp.sum_squares`, replace `scipy.linalg.sqrtm(Q).real` with the much faster `np.linalg.cholesky(Q + np.eye(Q.shape[0]) * 1e-9).T`.
