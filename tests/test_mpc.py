@@ -54,6 +54,10 @@ def test_mpc_invalid_matrix():
     dt = 0.1
     constraints = {'umin': -1, 'umax': 1}
 
+    # Test string matrix
+    with pytest.raises(ValueError, match="Q must be a numeric array"):
+        controller = mpc.MPCController(sys, "string_matrix", R, N, dt, constraints)
+
     with pytest.raises(ValueError, match="Q must be a square matrix|Q must be symmetric|R must be positive semi-definite|Q must have shape"):
         controller = mpc.MPCController(sys, Q, R, N, dt, constraints)
 

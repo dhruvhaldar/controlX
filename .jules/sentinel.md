@@ -12,12 +12,6 @@
 **Prevention:** If a mathematical operation essential to the function's output fails (e.g., trying to invert a singular matrix), do not return a special type like `None`. Instead, explicitly raise an informative exception (like `ValueError` or `np.linalg.LinAlgError` with a clear message) so the caller is forced to handle the failure securely at the boundary.
 ## 2024-05-19 - Prevent Insecure Mathematical Operations in Control Synthesis
 **Vulnerability:** The `design_lqr`, `design_kalman_filter`, and `design_lqg` functions permitted inputs of type `TransferFunction`. In `design_lqr`, the system was coerced into a `StateSpace` model using `ct.ss()`. This type coercion leads to a mathematically dangerous condition where user-provided state weight matrices (`Q`, `Qn`) are applied to an arbitrary state realization. This allows logical data corruption and produces unsafe controllers without any explicit warning to the user.
-**Learning:** Functions that require explicit structural knowledge (like physical state variables) must strictly validate object types. Coercing objects to simplify APIs (e.g. converting TFs to SS) in scientific contexts can destroy the mathematical meaning of parallel inputs (like weight matrices that specifically penalize distinct physical states).
-**Prevention:** Strictly enforce `control.StateSpace` inputs in control synthesis functions that take state-dependent matrices. If an invalid type like `TransferFunction` is supplied, fail securely by explicitly raising a `TypeError` explaining that state weights cannot be applied to arbitrary realizations.
-## 2024-05-24 - Remove Security Theater in Core Utilities
-**Vulnerability:** Artificial cap on array sizes (N <= 1000) deep inside the core MPC controller mathematical utility.
-**Learning:** Do not artificially cap array sizes deep inside core mathematical utilities or numerical functions to prevent DoS. This breaks legitimate scientific use cases and is considered 'security theater'. Input validation for resource exhaustion must happen at the application API or user-input boundary.
-**Prevention:** Ensure that any resource exhaustion checks are performed at the appropriate boundary layer, rather than embedded within core library code.
 ## 2026-04-06 - Prevent silent data corruption in weight matrices
 **Vulnerability:** Missing validation for weight matrices in MPC and synthesis functions.
 **Learning:** Invalid weight matrices lead to silent data corruption when calculating square roots.
@@ -30,3 +24,7 @@
 **Vulnerability:** Unvalidated constraint values passed directly to cvxpy solver parameters in the MPC controller.
 **Learning:** Control algorithms utilizing underlying math optimization solvers can crash violently or throw unhandled framework-level exceptions when provided with NaNs, infinites, or mis-dimensioned arrays for constraints. This could lead to DoS or application crashes in production control systems.
 **Prevention:** Always sanitize and validate constraint arrays (e.g., using `np.isfinite` and shape checking) at the boundary before passing them to the solver framework. Fail securely by raising an explicit `ValueError` early.
+## 2025-02-18 - Prevent Unhandled TypeErrors for Invalid Inputs
+**Vulnerability:** Core mathematical functions lacked structural type validation before array conversion.
+**Learning:** Functions accepting covariance/weight matrices and attempting direct mathematical checks (`np.isfinite`) on them without confirming they are numeric can cause framework-level `TypeError` crashes for inputs like strings or mixed-type lists.
+**Prevention:** Catch parsing exceptions (`ValueError`, `TypeError`) when validating generic multidimensional inputs and re-throw them as controlled `ValueError`s to fail securely.
