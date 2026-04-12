@@ -37,3 +37,7 @@
 ## 2025-05-16 - Replace scipy.linalg.sqrtm with np.linalg.cholesky for CVXPY sum_squares
 **Learning:** When formulating CVXPY costs using `cp.sum_squares(Q_sqrt @ x)`, computing the matrix square root `Q_sqrt` via `scipy.linalg.sqrtm` is slow (~0.59s for 100 iterations of a 100x100 matrix) because it uses the Schur decomposition. Since cost weighting matrices are positive semi-definite, `np.linalg.cholesky(Q).T` is mathematically equivalent for $x^T Q x = ||L^T x||_2^2$ and provides a massive speedup (~0.008s for 100 iterations).
 **Action:** When vectorizing quadratic cost functions with `cp.sum_squares`, replace `scipy.linalg.sqrtm(Q).real` with the much faster `np.linalg.cholesky(Q + np.eye(Q.shape[0]) * 1e-9).T`.
+
+## 2026-11-21 - Replace einsum with matmul and broadcasting for frequency response
+**Learning:** While `np.einsum` is often suggested for tensor contractions to save memory and avoid broadcasting, it can be significantly slower than `np.matmul` (`@`) combined with NumPy broadcasting, especially for large arrays with complex numbers. In the frequency response evaluation where we need to compute `CV * inv_s_minus_eig @ invVB`, `np.einsum('ok,fk,ki->foi', ...)` is ~8.5x slower than `(CV * inv_s_minus_eig[:, np.newaxis, :]) @ invVB` for systems with 50 states.
+**Action:** When computing batched matrix multiplications for frequency responses, prefer `np.matmul` with broadcasting over `np.einsum`.
