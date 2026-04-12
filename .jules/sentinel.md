@@ -28,3 +28,7 @@
 **Vulnerability:** Core mathematical functions lacked structural type validation before array conversion.
 **Learning:** Functions accepting covariance/weight matrices and attempting direct mathematical checks (`np.isfinite`) on them without confirming they are numeric can cause framework-level `TypeError` crashes for inputs like strings or mixed-type lists.
 **Prevention:** Catch parsing exceptions (`ValueError`, `TypeError`) when validating generic multidimensional inputs and re-throw them as controlled `ValueError`s to fail securely.
+## 2025-02-18 - Prevent Unhandled TypeErrors in Parameter Validation
+**Vulnerability:** Core mathematical functions lacked structural type validation for scalar parameters (like `dt` in MPCController).
+**Learning:** Functions accepting scalar values and performing direct mathematical checks (`dt <= 0`) on them without confirming they are numeric can cause framework-level `TypeError` crashes for invalid inputs like strings or `None`.
+**Prevention:** Catch parsing exceptions (`ValueError`, `TypeError`) when validating parameters by explicitly coercing inputs to expected types (e.g., `float()`), and re-throw them as controlled `ValueError`s to fail securely.
