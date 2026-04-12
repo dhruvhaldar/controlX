@@ -64,10 +64,16 @@ class MPCController:
         # Security: Input validation to prevent resource exhaustion
         if not isinstance(N, int) or N <= 0:
             raise ValueError("Prediction horizon N must be a positive integer")
-        if dt <= 0:
+
+        try:
+            dt_float = float(dt)
+        except (ValueError, TypeError):
+            raise ValueError("Sampling time dt must be a positive number.")
+
+        if dt_float <= 0:
             raise ValueError("Sampling time dt must be positive")
 
-        self.dt = dt
+        self.dt = dt_float
         self.N = N
 
         self.n_x = sys.nstates
