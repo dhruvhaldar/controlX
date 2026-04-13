@@ -87,7 +87,10 @@ class MPCController:
         # Security: Validate constraint inputs
         for key in ['umin', 'umax']:
             if key in self.constraints:
-                val = np.array(self.constraints[key], dtype=float)
+                try:
+                    val = np.array(self.constraints[key], dtype=float)
+                except (ValueError, TypeError):
+                    raise ValueError(f"Constraint {key} must be numeric.")
                 if not np.isfinite(val).all():
                     raise ValueError(f"Constraint {key} must contain only finite numbers.")
                 if val.ndim > 1 or (val.ndim == 1 and val.shape[0] != self.n_u and val.shape[0] != 1):
@@ -96,7 +99,10 @@ class MPCController:
 
         for key in ['xmin', 'xmax']:
             if key in self.constraints:
-                val = np.array(self.constraints[key], dtype=float)
+                try:
+                    val = np.array(self.constraints[key], dtype=float)
+                except (ValueError, TypeError):
+                    raise ValueError(f"Constraint {key} must be numeric.")
                 if not np.isfinite(val).all():
                     raise ValueError(f"Constraint {key} must contain only finite numbers.")
                 if val.ndim > 1 or (val.ndim == 1 and val.shape[0] != self.n_x and val.shape[0] != 1):

@@ -104,11 +104,14 @@ def test_mpc_invalid_constraints():
     dt = 0.1
 
     # Test invalid type/NaN
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Constraint umin must contain only finite numbers"):
         mpc.MPCController(sys, Q, R, N, dt, constraints={'umin': np.nan})
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ValueError, match="Constraint umax must be numeric"):
         mpc.MPCController(sys, Q, R, N, dt, constraints={'umax': 'invalid'})
+
+    with pytest.raises(ValueError, match="Constraint umin must be numeric"):
+        mpc.MPCController(sys, Q, R, N, dt, constraints={'umin': object()})
 
     # Test invalid shape for input constraints (system has 1 input)
     with pytest.raises(ValueError, match="invalid shape"):
