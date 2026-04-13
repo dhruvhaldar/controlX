@@ -32,3 +32,7 @@
 **Vulnerability:** Core mathematical functions lacked structural type validation for scalar parameters (like `dt` in MPCController).
 **Learning:** Functions accepting scalar values and performing direct mathematical checks (`dt <= 0`) on them without confirming they are numeric can cause framework-level `TypeError` crashes for invalid inputs like strings or `None`.
 **Prevention:** Catch parsing exceptions (`ValueError`, `TypeError`) when validating parameters by explicitly coercing inputs to expected types (e.g., `float()`), and re-throw them as controlled `ValueError`s to fail securely.
+## 2024-05-28 - Prevent Unhandled Exceptions from Invalid MPC Constraints
+**Vulnerability:** The `MPCController` class lacked explicit type validation for its `constraints` values (e.g., `umin`, `umax`), leading to unhandled `TypeError` exceptions deep in framework functions like `np.array(..., dtype=float)` if non-numeric types were provided.
+**Learning:** In mathematical APIs, directly passing unvalidated boundary data to underlying numerical frameworks can cause abrupt application crashes instead of securely returning controlled errors. This can act as a vector for application DoS or instability.
+**Prevention:** Always wrap data type coercions (`np.array(..., dtype=float)`) in explicit `try...except (ValueError, TypeError)` blocks at the boundary before further matrix processing, ensuring failure securely via predictable exceptions like `ValueError`.
