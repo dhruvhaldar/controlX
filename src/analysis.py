@@ -12,6 +12,8 @@ def calculate_poles(sys):
     Returns:
         np.ndarray: Array of poles.
     """
+    if isinstance(sys, ct.StateSpace) and getattr(sys, 'E', None) is None:
+        return np.linalg.eigvals(sys.A)
     return ct.poles(sys)
 
 def calculate_zeros(sys):

@@ -41,3 +41,7 @@
 ## 2026-11-21 - Replace einsum with matmul and broadcasting for frequency response
 **Learning:** While `np.einsum` is often suggested for tensor contractions to save memory and avoid broadcasting, it can be significantly slower than `np.matmul` (`@`) combined with NumPy broadcasting, especially for large arrays with complex numbers. In the frequency response evaluation where we need to compute `CV * inv_s_minus_eig @ invVB`, `np.einsum('ok,fk,ki->foi', ...)` is ~8.5x slower than `(CV * inv_s_minus_eig[:, np.newaxis, :]) @ invVB` for systems with 50 states.
 **Action:** When computing batched matrix multiplications for frequency responses, prefer `np.matmul` with broadcasting over `np.einsum`.
+
+## 2024-05-19 - Bypassing ct.feedback for StateSpace models
+**Learning:** The `control.feedback` function introduces significant overhead (creating and validating objects) when computing sensitivity S = (I + L)^-1 and complementary sensitivity T = L(I + L)^-1 functions for `StateSpace` models.
+**Action:** When computing sensitivity and complementary sensitivity for `StateSpace` models, directly calculate the resulting state space matrices using the algebraic formulas (e.g., A_s = A - B(I+D)^-1 C) to achieve a ~40% performance speedup.

@@ -13,6 +13,21 @@ def sensitivity_function(G, K):
     Returns:
         control.StateSpace: The sensitivity function S.
     """
+    # ⚡ Bolt Optimization: Fast computation of sensitivity function for StateSpace models.
+    # Bypasses the significant overhead of ct.feedback and object creation
+    # by directly computing the resulting state space matrices.
+    if isinstance(G, ct.StateSpace) and isinstance(K, ct.StateSpace):
+        L = G * K
+        I_plus_D = np.eye(L.noutputs) + L.D
+        inv_I_plus_D = np.linalg.inv(I_plus_D)
+
+        A_s = L.A - L.B @ inv_I_plus_D @ L.C
+        B_s = L.B @ inv_I_plus_D
+        C_s = -inv_I_plus_D @ L.C
+        D_s = inv_I_plus_D
+
+        return ct.ss(A_s, B_s, C_s, D_s, L.dt)
+
     L = G * K
     # Sensitivity Function S = (I + L)^-1
     # control.feedback returns L / (1+L) if sign=-1
@@ -50,6 +65,21 @@ def complementary_sensitivity_function(G, K):
     Returns:
         control.StateSpace: The complementary sensitivity function T.
     """
+    # ⚡ Bolt Optimization: Fast computation of complementary sensitivity function for StateSpace models.
+    # Bypasses the significant overhead of ct.feedback and object creation
+    # by directly computing the resulting state space matrices.
+    if isinstance(G, ct.StateSpace) and isinstance(K, ct.StateSpace):
+        L = G * K
+        I_plus_D = np.eye(L.noutputs) + L.D
+        inv_I_plus_D = np.linalg.inv(I_plus_D)
+
+        A_T = L.A - L.B @ inv_I_plus_D @ L.C
+        B_T = L.B @ inv_I_plus_D
+        C_T = inv_I_plus_D @ L.C
+        D_T = L.D @ inv_I_plus_D
+
+        return ct.ss(A_T, B_T, C_T, D_T, L.dt)
+
     L = G * K
     # T = L / (1 + L)
     # Using feedback(L, I) or feedback(L, 1) if SISO
