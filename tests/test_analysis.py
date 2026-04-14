@@ -54,3 +54,15 @@ def test_relative_gain_array():
     G = np.array([[1, 1], [1, 1]])
     with pytest.raises(ValueError, match="Cannot compute RGA: System gain matrix is singular."):
         analysis.relative_gain_array(G)
+
+    # Invalid string matrix
+    with pytest.raises(ValueError, match="Gain matrix must be a numeric array."):
+        analysis.relative_gain_array("invalid")
+
+    # Invalid 1D array
+    with pytest.raises(ValueError, match="Cannot compute RGA: System gain matrix is singular."):
+        analysis.relative_gain_array([1, 2])
+
+    # Matrix with NaNs
+    with pytest.raises(ValueError, match="Gain matrix must contain only finite numbers."):
+        analysis.relative_gain_array(np.array([[1, np.nan], [0, 1]]))

@@ -122,8 +122,18 @@ def relative_gain_array(G):
         np.ndarray: The RGA matrix.
     """
     try:
-        G_inv = np.linalg.inv(G)
-        RGA = G * G_inv.T
+        G_arr = np.array(G, dtype=float)
+    except (ValueError, TypeError):
+        raise ValueError("Gain matrix must be a numeric array.")
+
+    G_arr = np.atleast_2d(G_arr)
+
+    if not np.isfinite(G_arr).all():
+        raise ValueError("Gain matrix must contain only finite numbers.")
+
+    try:
+        G_inv = np.linalg.inv(G_arr)
+        RGA = G_arr * G_inv.T
         return RGA
     except np.linalg.LinAlgError:
         # Security: Fail securely by throwing a dedicated error instead of returning None.
