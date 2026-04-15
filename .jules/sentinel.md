@@ -40,3 +40,7 @@
 **Vulnerability:** The `relative_gain_array` function lacked explicit type and structural validation for its gain matrix `G`, leading to unhandled `LinAlgError` or `TypeError` exceptions deep within the numpy framework if non-numeric types, strings, or scalars were provided.
 **Learning:** Mathematical utility functions that perform matrix operations directly on user inputs must validate the structure and content type. Unhandled exceptions in the underlying numerical frameworks can crash the application instead of securely returning controlled errors.
 **Prevention:** Always wrap data type coercions (`np.array(..., dtype=float)`) and structural checks in explicit `try...except` blocks at the function boundary, ensuring secure failure via predictable exceptions like `ValueError`.
+## 2025-02-18 - Prevent Unhandled TypeErrors in Optional Matrix Validation
+**Vulnerability:** The `design_kalman_filter` function failed to validate its optional parameter `G`, leading to unhandled `AttributeError` exceptions when non-matrix types were provided.
+**Learning:** Optional matrix parameters must be explicitly validated before their properties (like `.shape`) are used to validate other inputs (like `Qn`). Assuming default properties without type checking can cause framework-level crashes for invalid user input.
+**Prevention:** Always explicitly validate and cast optional matrices to numeric arrays (handling `ValueError`/`TypeError` safely) before accessing structural properties like `.shape` or passing them to solvers.

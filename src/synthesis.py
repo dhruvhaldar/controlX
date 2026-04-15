@@ -94,6 +94,17 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
     if G is None:
         G = sys.B
 
+    try:
+        G = np.array(G, dtype=float)
+    except (ValueError, TypeError):
+        raise ValueError("Matrix G must be a numeric array.")
+
+    G = np.atleast_2d(G)
+    if not np.isfinite(G).all():
+        raise ValueError("Matrix G must contain only finite numbers.")
+    if G.shape[0] != sys.nstates:
+        raise ValueError(f"Matrix G must have {sys.nstates} rows.")
+
     # Security: Validate matrices to prevent silent data corruption later
     Qn = _validate_matrix(Qn, expected_shape=(G.shape[1], G.shape[1]), name="Qn")
     Rn = _validate_matrix(Rn, expected_shape=(sys.noutputs, sys.noutputs), name="Rn")
