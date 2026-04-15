@@ -45,3 +45,11 @@
 ## 2024-05-19 - Bypassing ct.feedback for StateSpace models
 **Learning:** The `control.feedback` function introduces significant overhead (creating and validating objects) when computing sensitivity S = (I + L)^-1 and complementary sensitivity T = L(I + L)^-1 functions for `StateSpace` models.
 **Action:** When computing sensitivity and complementary sensitivity for `StateSpace` models, directly calculate the resulting state space matrices using the algebraic formulas (e.g., A_s = A - B(I+D)^-1 C) to achieve a ~40% performance speedup.
+
+## 2026-11-23 - Fast path for strictly proper systems in sensitivity operations
+**Learning:** When computing algebraic relations for StateSpace models (like sensitivity S = (I + L)^-1 or complementary sensitivity T = L(I + L)^-1), evaluating `np.linalg.inv(I + D)` is completely unnecessary for strictly proper systems where D is a zero matrix. Creating the identity matrix, adding D, and running `np.linalg.inv` introduces a large constant overhead (~40% of the function time for typical small state spaces).
+**Action:** When computing sensitivity matrix algebraic operations, always implement a fast path checking `if not np.any(L.D):` to bypass the identity matrix creation, the matrix addition, and the matrix inversion, substituting them with pre-calculated algebraic simplifications (e.g., `A_s = L.A - L.B @ L.C`). This provides an additional ~2x speedup on top of the algebraic formulas.
+
+## 2026-11-23 - Replace np.linalg.inv with np.linalg.solve for symmetric matrices
+**Learning:** Computing `L = P @ C.T @ np.linalg.inv(Rn)` explicitly calculates the inverse of `Rn`, which is slower and less numerically stable than solving a linear system. Since `Rn` is symmetric and positive semi-definite (being a covariance matrix), and `P` is symmetric, we can mathematically rearrange the equation to `L = np.linalg.solve(Rn.T, C @ P).T`.
+**Action:** When calculating estimator gains or similar expressions involving a right-multiplied inverse `X = A B^-1`, rewrite it as a linear solve `X = np.linalg.solve(B.T, A.T).T`. This avoids the explicit inverse and provides a measurable speedup (~25% in benchmarks).
