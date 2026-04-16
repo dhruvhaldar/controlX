@@ -66,3 +66,25 @@ def test_relative_gain_array():
     # Matrix with NaNs
     with pytest.raises(ValueError, match="Gain matrix must contain only finite numbers."):
         analysis.relative_gain_array(np.array([[1, np.nan], [0, 1]]))
+
+def test_calculate_singular_values_invalid_omega():
+    sys = ct.ss([[-1]], [[1]], [[1]], [[0]])
+    with pytest.raises(ValueError, match="omega must be a numeric array or scalar."):
+        analysis.calculate_singular_values(sys, omega="invalid")
+
+    with pytest.raises(ValueError, match="omega must contain only finite numbers."):
+        analysis.calculate_singular_values(sys, omega=np.nan)
+
+    with pytest.raises(ValueError, match="omega must contain only finite numbers."):
+        analysis.calculate_singular_values(sys, omega=[1, np.inf])
+
+def test_system_gain_invalid_omega():
+    sys = ct.ss([[-1]], [[1]], [[1]], [[0]])
+    with pytest.raises(ValueError, match="omega must be a numeric value."):
+        analysis.system_gain(sys, omega="invalid")
+
+    with pytest.raises(ValueError, match="omega must be finite."):
+        analysis.system_gain(sys, omega=np.nan)
+
+    with pytest.raises(ValueError, match="omega must be finite."):
+        analysis.system_gain(sys, omega=np.inf)

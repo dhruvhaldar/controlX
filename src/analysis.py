@@ -40,12 +40,19 @@ def calculate_singular_values(sys, omega=0):
         np.ndarray: Array of singular values, sorted in descending order.
                     If omega is array-like, returns an array of shape (len(omega), min(n_outputs, n_inputs)).
     """
+    try:
+        omega_arr = np.array(np.atleast_1d(omega), dtype=float)
+    except (ValueError, TypeError):
+        raise ValueError("omega must be a numeric array or scalar.")
+
+    if not np.isfinite(omega_arr).all():
+        raise ValueError("omega must contain only finite numbers.")
+
     # ⚡ Bolt Optimization: Vectorize singular value calculation for multiple frequencies
     # Replaces slow individual evalfr calls with batched frequency_response and SVD.
     # Furthermore, avoid sys.frequency_response overhead for StateSpace objects (which relies
     # on slow Horner evaluation fallback) by directly computing C @ inv(sI - A) @ B + D.
     # This provides an additional ~10x speedup for StateSpace systems over an array of frequencies.
-    omega_arr = np.atleast_1d(omega)
 
     if isinstance(sys, ct.StateSpace):
         if sys.dt is None or sys.dt == 0:
@@ -151,10 +158,18 @@ def system_gain(sys, omega=0):
     Returns:
         np.ndarray: The frequency response matrix at the given frequency.
     """
+    try:
+        omega_val = float(omega)
+    except (ValueError, TypeError):
+        raise ValueError("omega must be a numeric value.")
+
+    if not np.isfinite(omega_val):
+        raise ValueError("omega must be finite.")
+
     # ⚡ Bolt Optimization: Replace slow ct.evalfr with direct matrix solve
     # for StateSpace systems. Provides ~5-9x speedup by bypassing wrapper overhead.
     if isinstance(sys, ct.StateSpace):
-        s = omega * 1j
+        s = omega_val * 1j
         try:
             res = sys.C @ np.linalg.solve(s * np.eye(sys.nstates) - sys.A, sys.B) + sys.D
             if sys.ninputs == 1 and sys.noutputs == 1:
@@ -165,4 +180,4 @@ def system_gain(sys, omega=0):
             if sys.ninputs == 1 and sys.noutputs == 1:
                 return res[0, 0]
             return res
-    return ct.evalfr(sys, omega * 1j)
+    return ct.evalfr(sys, omega_val * 1j)
