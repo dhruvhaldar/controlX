@@ -30,7 +30,11 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     # providing a significant speedup for large matrices.
     try:
         # Add a small epsilon for numerical stability with semi-definite matrices
-        np.linalg.cholesky(matrix + np.eye(matrix.shape[0]) * 1e-9)
+        # ⚡ Bolt Optimization: Avoid dense identity matrices. Modifying the flat diagonal
+        # is faster than creating an identity matrix and adding the two full matrices.
+        eps_matrix = matrix.copy()
+        eps_matrix.flat[::matrix.shape[0]+1] += 1e-9
+        np.linalg.cholesky(eps_matrix)
     except np.linalg.LinAlgError:
         raise ValueError(f"{name} must be positive semi-definite.")
     return matrix
@@ -166,9 +170,18 @@ class MPCController:
         # Replacing the Python loop and cp.quad_form with cp.sum_squares of matrix square roots
         # reduces problem compilation time significantly and improves solve time.
         # ⚡ Bolt Optimization: Replace slow scipy.linalg.sqrtm with fast np.linalg.cholesky.
-        Q_sqrt = np.linalg.cholesky(self.Q + np.eye(self.Q.shape[0]) * 1e-9).T
-        R_sqrt = np.linalg.cholesky(self.R + np.eye(self.R.shape[0]) * 1e-9).T
-        P_sqrt = np.linalg.cholesky(self.P + np.eye(self.P.shape[0]) * 1e-9).T
+        # ⚡ Bolt Optimization: Avoid dense identity matrices for adding diagonal epsilons.
+        Q_eps = self.Q.copy()
+        Q_eps.flat[::self.Q.shape[0]+1] += 1e-9
+        Q_sqrt = np.linalg.cholesky(Q_eps).T
+
+        R_eps = self.R.copy()
+        R_eps.flat[::self.R.shape[0]+1] += 1e-9
+        R_sqrt = np.linalg.cholesky(R_eps).T
+
+        P_eps = self.P.copy()
+        P_eps.flat[::self.P.shape[0]+1] += 1e-9
+        P_sqrt = np.linalg.cholesky(P_eps).T
 
         cost = (cp.sum_squares(Q_sqrt @ self._x[:, :-1]) +
                 cp.sum_squares(R_sqrt @ self._u) +

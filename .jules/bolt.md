@@ -53,3 +53,7 @@
 ## 2026-11-23 - Replace np.linalg.inv with np.linalg.solve for symmetric matrices
 **Learning:** Computing `L = P @ C.T @ np.linalg.inv(Rn)` explicitly calculates the inverse of `Rn`, which is slower and less numerically stable than solving a linear system. Since `Rn` is symmetric and positive semi-definite (being a covariance matrix), and `P` is symmetric, we can mathematically rearrange the equation to `L = np.linalg.solve(Rn.T, C @ P).T`.
 **Action:** When calculating estimator gains or similar expressions involving a right-multiplied inverse `X = A B^-1`, rewrite it as a linear solve `X = np.linalg.solve(B.T, A.T).T`. This avoids the explicit inverse and provides a measurable speedup (~25% in benchmarks).
+
+## 2026-11-24 - Avoiding dense identity matrices with np.eye for diagonal additions
+**Learning:** Using `matrix + np.eye(N) * epsilon` to add a small value to the diagonal of a matrix creates a full dense identity matrix. For large matrices or high-frequency loops, this identity creation and matrix addition is measurably slower than copying the array and modifying its flat view `eps_matrix.flat[::N+1] += epsilon`.
+**Action:** When adding small epsilon values to matrix diagonals (e.g., for numerical stability before Cholesky decompositions), avoid `np.eye`. Instead, copy the matrix and modify the flat diagonal elements directly using `.flat[::N+1] += epsilon`.

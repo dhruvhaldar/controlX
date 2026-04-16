@@ -26,7 +26,11 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     # providing a significant speedup for large matrices.
     try:
         # Add a small epsilon for numerical stability with semi-definite matrices
-        np.linalg.cholesky(matrix + np.eye(matrix.shape[0]) * 1e-9)
+        # ⚡ Bolt Optimization: Avoid dense identity matrices. Modifying the flat diagonal
+        # is faster than creating an identity matrix and adding the two full matrices.
+        eps_matrix = matrix.copy()
+        eps_matrix.flat[::matrix.shape[0]+1] += 1e-9
+        np.linalg.cholesky(eps_matrix)
     except np.linalg.LinAlgError:
         raise ValueError(f"{name} must be positive semi-definite.")
     return matrix
