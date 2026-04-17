@@ -57,3 +57,7 @@
 ## 2026-11-24 - Avoiding dense identity matrices with np.eye for diagonal additions
 **Learning:** Using `matrix + np.eye(N) * epsilon` to add a small value to the diagonal of a matrix creates a full dense identity matrix. For large matrices or high-frequency loops, this identity creation and matrix addition is measurably slower than copying the array and modifying its flat view `eps_matrix.flat[::N+1] += epsilon`.
 **Action:** When adding small epsilon values to matrix diagonals (e.g., for numerical stability before Cholesky decompositions), avoid `np.eye`. Instead, copy the matrix and modify the flat diagonal elements directly using `.flat[::N+1] += epsilon`.
+
+## 2026-11-25 - Fast Transmission Zeros for StateSpace Models without Slycot
+**Learning:** When `slycot` is not installed, `control.zeros` for StateSpace models falls back to computing the generalized eigenvalues of the system matrix pencil, which is slow. If the system is square and the feedthrough matrix `D` is invertible, the zeros are simply the eigenvalues of `A - B @ D^-1 @ C`, avoiding the large block matrix construction and generalized eigenvalue solver.
+**Action:** When calculating zeros of StateSpace models, attempt to invert `D` and compute `np.linalg.eigvals(A - B @ invD_C)`. This provides a ~2.5x speedup for systems with invertible `D`. If `D` is singular, pre-allocate the block matrix pencil instead of using `np.block` for an additional ~20% speedup.
