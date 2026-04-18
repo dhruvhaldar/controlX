@@ -38,3 +38,14 @@ def test_robust_stability_margin():
     # Margin = 1/0.5 = 2.0
     margin = robustness.robust_stability_margin(T)
     assert np.isclose(margin, 2.0, atol=0.1)
+
+def test_calculate_hinf_norm_invalid_omega():
+    sys = ct.ss([[-1]], [[1]], [[1]], [[0]])
+    with pytest.raises(ValueError, match="omega must be a numeric array or scalar."):
+        robustness.calculate_hinf_norm(sys, omega="invalid")
+
+    with pytest.raises(ValueError, match="omega must contain only finite numbers."):
+        robustness.calculate_hinf_norm(sys, omega=np.nan)
+
+    with pytest.raises(ValueError, match="omega must contain only finite numbers."):
+        robustness.calculate_hinf_norm(sys, omega=[1, np.inf])
