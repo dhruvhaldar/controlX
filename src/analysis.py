@@ -78,8 +78,9 @@ def calculate_singular_values(sys, omega=0):
                 resp_T = (CV * inv_s_minus_eig[:, np.newaxis, :]) @ invVB + sys.D
             else:
                 # Fallback for non-diagonalizable matrices
-                I = np.eye(sys.nstates)
-                sI_minus_A = s[:, np.newaxis, np.newaxis] * I - sys.A
+                sI_minus_A = np.empty((len(omega_arr), sys.nstates, sys.nstates), dtype=complex)
+                sI_minus_A[...] = -sys.A
+                sI_minus_A[:, np.arange(sys.nstates), np.arange(sys.nstates)] += s[:, np.newaxis]
                 B_b = np.broadcast_to(sys.B, (len(omega_arr), sys.nstates, sys.ninputs))
                 X = np.linalg.solve(sI_minus_A, B_b)
                 resp_T = sys.C @ X + sys.D
@@ -171,7 +172,9 @@ def system_gain(sys, omega=0):
     if isinstance(sys, ct.StateSpace):
         s = omega_val * 1j
         try:
-            res = sys.C @ np.linalg.solve(s * np.eye(sys.nstates) - sys.A, sys.B) + sys.D
+            sI_minus_A = -sys.A.astype(complex)
+            sI_minus_A.flat[::sys.nstates + 1] += s
+            res = sys.C @ np.linalg.solve(sI_minus_A, sys.B) + sys.D
             if sys.ninputs == 1 and sys.noutputs == 1:
                 return res[0, 0]
             return res

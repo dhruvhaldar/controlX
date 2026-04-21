@@ -150,8 +150,9 @@ def calculate_hinf_norm(sys, omega=None):
                 # Einsum is significantly slower (~8.5x for 50 states) than vectorized broadcasting + matmul.
                 resp_T = (CV * inv_s_minus_eig[:, np.newaxis, :]) @ invVB + sys.D
             else:
-                I = np.eye(sys.nstates)
-                sI_minus_A = s[:, np.newaxis, np.newaxis] * I - sys.A
+                sI_minus_A = np.empty((len(omega_arr), sys.nstates, sys.nstates), dtype=complex)
+                sI_minus_A[...] = -sys.A
+                sI_minus_A[:, np.arange(sys.nstates), np.arange(sys.nstates)] += s[:, np.newaxis]
                 B_b = np.broadcast_to(sys.B, (len(omega_arr), sys.nstates, sys.ninputs))
                 X = np.linalg.solve(sI_minus_A, B_b)
                 resp_T = sys.C @ X + sys.D

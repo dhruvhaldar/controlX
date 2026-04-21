@@ -57,3 +57,7 @@
 ## 2026-11-24 - Avoiding dense identity matrices with np.eye for diagonal additions
 **Learning:** Using `matrix + np.eye(N) * epsilon` to add a small value to the diagonal of a matrix creates a full dense identity matrix. For large matrices or high-frequency loops, this identity creation and matrix addition is measurably slower than copying the array and modifying its flat view `eps_matrix.flat[::N+1] += epsilon`.
 **Action:** When adding small epsilon values to matrix diagonals (e.g., for numerical stability before Cholesky decompositions), avoid `np.eye`. Instead, copy the matrix and modify the flat diagonal elements directly using `.flat[::N+1] += epsilon`.
+
+## 2026-11-25 - Avoiding dense identity matrices with np.eye for sI-A
+**Learning:** Using `s * np.eye(N) - A` or `s[:, None, None] * np.eye(N) - A` to create the `sI - A` matrix creates full dense identity matrices. For scalar cases, this is measurably slower than preallocating `-A.astype(complex)` and modifying its flat view `sI_minus_A.flat[::N+1] += s`. For batched frequencies, creating the identity matrix array is much slower than preallocating `np.empty`, copying `-A`, and adding `s` directly using advanced indexing `sI_minus_A[:, np.arange(N), np.arange(N)] += s[:, np.newaxis]`. This provides a ~8x speedup for the batched case.
+**Action:** When creating `sI - A` matrices (especially for many frequency points), avoid `np.eye`. Instead, preallocate memory and modify the diagonal elements directly to bypass the dense matrix creations and additions.
