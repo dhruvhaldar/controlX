@@ -56,3 +56,7 @@
 **Vulnerability:** The `small_gain_theorem_check` function lacked explicit type and structural validation for system/gain inputs `M` and `Delta`, leading to unhandled `ValueError` (dimension mismatch) or `UFuncNoLoopError` exceptions deep within numpy when passing strings or invalid arrays.
 **Learning:** Mathematical utility functions that perform operations directly on user inputs must validate the structure and content type. Unhandled exceptions in underlying numerical frameworks can crash the application instead of securely returning controlled errors.
 **Prevention:** Always wrap data type coercions (`np.array(..., dtype=float)`) and structural checks in explicit `try...except` blocks at the function boundary, ensuring secure failure via predictable exceptions like `ValueError`.
+## 2025-05-18 - Prevent Unhandled TypeErrors in Robustness Computations
+**Vulnerability:** The `sensitivity_function` and `complementary_sensitivity_function` lacked input type validation, leading to unhandled framework `TypeError` exceptions on invalid inputs like strings.
+**Learning:** Control algorithms utilizing underlying objects without proper type validation can fail abruptly instead of securely returning controlled errors. This acts as a vector for application instability.
+**Prevention:** Always ensure parameters passed to operations that expect control framework objects (e.g. `ct.StateSpace` or `ct.TransferFunction`) are explicitly validated to fail securely via predictable exceptions like `TypeError`.

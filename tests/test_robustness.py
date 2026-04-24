@@ -9,6 +9,21 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../src'
 
 import robustness
 
+def test_sensitivity_functions_invalid_input():
+    sys = ct.tf([1], [1, 1])
+
+    with pytest.raises(TypeError, match="Plant G must be a control.StateSpace or control.TransferFunction object."):
+        robustness.sensitivity_function("invalid", sys)
+
+    with pytest.raises(TypeError, match="Controller K must be a control.StateSpace or control.TransferFunction object."):
+        robustness.sensitivity_function(sys, "invalid")
+
+    with pytest.raises(TypeError, match="Plant G must be a control.StateSpace or control.TransferFunction object."):
+        robustness.complementary_sensitivity_function("invalid", sys)
+
+    with pytest.raises(TypeError, match="Controller K must be a control.StateSpace or control.TransferFunction object."):
+        robustness.complementary_sensitivity_function(sys, "invalid")
+
 def test_sensitivity_function():
     sys = ct.tf([1], [1, 1])
     K = ct.tf([1], [1])
