@@ -53,3 +53,10 @@ def test_small_gain_theorem_check_invalid_input():
 
     with pytest.raises(ValueError, match="Delta must contain only finite numbers."):
         robustness.small_gain_theorem_check(sys, np.nan)
+
+def test_invalid_system_type():
+    with pytest.raises(TypeError):
+        robustness.sensitivity_function("invalid", "invalid")
+
+    with pytest.raises(TypeError):
+        robustness.complementary_sensitivity_function("invalid", "invalid")

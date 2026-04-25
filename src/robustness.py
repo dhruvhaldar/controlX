@@ -13,6 +13,9 @@ def sensitivity_function(G, K):
     Returns:
         control.StateSpace: The sensitivity function S.
     """
+    if not isinstance(G, (ct.StateSpace, ct.TransferFunction)) or not isinstance(K, (ct.StateSpace, ct.TransferFunction)):
+        raise TypeError("G and K must be control.StateSpace or control.TransferFunction objects.")
+
     # ⚡ Bolt Optimization: Fast computation of sensitivity function for StateSpace models.
     # Bypasses the significant overhead of ct.feedback and object creation
     # by directly computing the resulting state space matrices.
@@ -75,6 +78,9 @@ def complementary_sensitivity_function(G, K):
     Returns:
         control.StateSpace: The complementary sensitivity function T.
     """
+    if not isinstance(G, (ct.StateSpace, ct.TransferFunction)) or not isinstance(K, (ct.StateSpace, ct.TransferFunction)):
+        raise TypeError("G and K must be control.StateSpace or control.TransferFunction objects.")
+
     # ⚡ Bolt Optimization: Fast computation of complementary sensitivity function for StateSpace models.
     # Bypasses the significant overhead of ct.feedback and object creation
     # by directly computing the resulting state space matrices.

@@ -88,3 +88,16 @@ def test_system_gain_invalid_omega():
 
     with pytest.raises(ValueError, match="omega must be finite."):
         analysis.system_gain(sys, omega=np.inf)
+
+def test_invalid_system_type():
+    with pytest.raises(TypeError):
+        analysis.calculate_poles("invalid")
+
+    with pytest.raises(TypeError):
+        analysis.calculate_zeros("invalid")
+
+    with pytest.raises(TypeError):
+        analysis.calculate_singular_values("invalid", omega=1.0)
+
+    with pytest.raises(TypeError):
+        analysis.system_gain("invalid", omega=1.0)

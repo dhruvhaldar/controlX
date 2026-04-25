@@ -12,6 +12,9 @@ def calculate_poles(sys):
     Returns:
         np.ndarray: Array of poles.
     """
+    if not isinstance(sys, (ct.StateSpace, ct.TransferFunction)):
+        raise TypeError("sys must be a control.StateSpace or control.TransferFunction object.")
+
     if isinstance(sys, ct.StateSpace) and getattr(sys, 'E', None) is None:
         return np.linalg.eigvals(sys.A)
     return ct.poles(sys)
@@ -26,6 +29,9 @@ def calculate_zeros(sys):
     Returns:
         np.ndarray: Array of zeros.
     """
+    if not isinstance(sys, (ct.StateSpace, ct.TransferFunction)):
+        raise TypeError("sys must be a control.StateSpace or control.TransferFunction object.")
+
     return ct.zeros(sys)
 
 def calculate_singular_values(sys, omega=0):
@@ -40,6 +46,9 @@ def calculate_singular_values(sys, omega=0):
         np.ndarray: Array of singular values, sorted in descending order.
                     If omega is array-like, returns an array of shape (len(omega), min(n_outputs, n_inputs)).
     """
+    if not isinstance(sys, (ct.StateSpace, ct.TransferFunction)):
+        raise TypeError("sys must be a control.StateSpace or control.TransferFunction object.")
+
     try:
         omega_arr = np.array(np.atleast_1d(omega), dtype=float)
     except (ValueError, TypeError):
@@ -159,6 +168,9 @@ def system_gain(sys, omega=0):
     Returns:
         np.ndarray: The frequency response matrix at the given frequency.
     """
+    if not isinstance(sys, (ct.StateSpace, ct.TransferFunction)):
+        raise TypeError("sys must be a control.StateSpace or control.TransferFunction object.")
+
     try:
         omega_val = float(omega)
     except (ValueError, TypeError):
