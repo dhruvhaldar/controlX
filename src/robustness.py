@@ -124,6 +124,9 @@ def calculate_hinf_norm(sys, omega=None):
     Returns:
         float: The approximated H-infinity norm.
     """
+    if not isinstance(sys, (ct.StateSpace, ct.TransferFunction)):
+        raise TypeError("sys must be a control.StateSpace or control.TransferFunction object.")
+
     if omega is None:
         omega = np.logspace(-2, 2, 1000)
 
@@ -250,6 +253,9 @@ def robust_stability_margin(S, omega=None):
     Returns:
         float: The stability margin.
     """
+    if not isinstance(S, (ct.StateSpace, ct.TransferFunction)):
+        raise TypeError("S must be a control.StateSpace or control.TransferFunction object.")
+
     norm_S = calculate_hinf_norm(S, omega)
     if norm_S == 0:
         return float('inf')
