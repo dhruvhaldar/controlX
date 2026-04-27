@@ -68,6 +68,8 @@ class MPCController:
         # Security: Input validation to prevent resource exhaustion
         if not isinstance(N, int) or N <= 0:
             raise ValueError("Prediction horizon N must be a positive integer")
+        if N > 10000:
+            raise ValueError("Prediction horizon N is too large (exceeds maximum allowed 10000) and would cause resource exhaustion.")
 
         try:
             dt_float = float(dt)

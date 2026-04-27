@@ -60,3 +60,7 @@
 **Vulnerability:** The `calculate_poles`, `calculate_zeros`, `calculate_singular_values`, `system_gain`, `sensitivity_function`, and `complementary_sensitivity_function` functions lacked explicit type validation for their system inputs (`sys`, `G`, `K`), leading to unhandled `AttributeError` or framework-level exceptions when non-system types like strings were provided.
 **Learning:** Core functions in scientific computing libraries must strictly validate that inputs are of expected types (like `StateSpace` or `TransferFunction`). Relying on duck typing without validation can cause obscure and difficult-to-debug crashes deep within the framework when invalid input types are accessed.
 **Prevention:** Always add explicit `isinstance` checks at the function boundary for critical input parameters expecting specific object types, and fail securely by raising a predictable `TypeError`.
+## 2025-04-27 - Prevent DoS via unbounded MPC prediction horizon
+**Vulnerability:** The `MPCController` allowed arbitrarily large prediction horizons `N` to be passed to the CVXPY solver.
+**Learning:** CVXPY generates constraints and variables proportional to `N` and recompiles the problem structure in memory. An excessively large `N` (e.g. >1,000,000) leads to massive memory allocation and CPU consumption during `__init__`, causing the application to crash or freeze (OOM/DoS) before any solve is even attempted.
+**Prevention:** Enforce a strict upper bound limit on problem size parameter `N` (e.g., 10000) at the API boundary, raising a `ValueError` for resource exhaustion.
