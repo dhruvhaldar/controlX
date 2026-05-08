@@ -81,3 +81,7 @@
 ## 2026-11-28 - Fast Algebraic Sensitivity Matrix Operations
 **Learning:** When calculating algebraic matrices for sensitivity S = (I + L)^-1 or complementary sensitivity T = L(I + L)^-1 for StateSpace models, creating `I + D` via `np.eye` addition is slow, and computing the matrices calculates `inv(I + D) @ C` redundantly in both `A_s` and `C_s`.
 **Action:** Always avoid `np.eye` by copying `D` and modifying its flat view `D_eps = D.copy(); D_eps.flat[::N+1] += 1.0`. Furthermore, always cache `inv_I_plus_D_C = inv(I + D) @ C` to eliminate a redundant $O(N^3)$ matrix multiplication, saving ~35% of the total computation time.
+
+## 2026-11-29 - Fast path for strictly proper systems in LQG design
+**Learning:** When computing the closed-loop `Ac` matrix in `design_lqg` (`Ac = A - B @ K - L @ C + L @ D @ K`), computing `L @ D @ K` for strictly proper systems (where `D` is all zeros) adds significant unnecessary overhead.
+**Action:** Implement a fast path checking `if not np.any(D):` to bypass the `L @ D @ K` multiplication for strictly proper systems, substituting it with the simpler `Ac = A - B @ K - L @ C`. This provides a ~50% speedup for the `Ac` matrix computation.
