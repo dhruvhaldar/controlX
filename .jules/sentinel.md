@@ -90,3 +90,7 @@
 **Vulnerability:** The synthesis functions (`design_lqr`, `design_kalman_filter`) allowed raw exceptions (`LinAlgError`, `ValueError`) to propagate to the user when encountering systems that cannot yield a valid Riccati solution (e.g., uncontrollable or unobservable systems).
 **Learning:** In control synthesis operations, failing to handle exceptions from underlying solvers (like `scipy.linalg.solve_continuous_are`) exposes framework implementation details and stack traces. This leaks internal workings and fails insecurely.
 **Prevention:** Always wrap Riccati solver calls in a `try...except` block catching numerical errors, and explicitly raise a `ValueError` with a clear, domain-specific explanation (e.g., "Failed to solve Riccati equation").
+## 2025-10-26 - Prevent Framework Exceptions via Matrix Dimension Validation
+**Vulnerability:** The `_validate_matrix` function failed to validate the `ndim` of matrix inputs, leading to an unhandled `LinAlgError` from `numpy.linalg.cholesky` when 3D arrays were provided, which resulted in a misleading error message and potential vulnerability in matrix operations down the line.
+**Learning:** In control robustness operations, failing to explicitly validate matrix dimensionalities before passing them to internal mathematical functions (like Cholesky decompositions) can result in framework-level exception leakage.
+**Prevention:** Always explicitly validate that matrix inputs are at most 2D (using `matrix.ndim <= 2`) and raise a domain-specific `ValueError` to fail securely.
