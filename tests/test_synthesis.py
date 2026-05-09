@@ -107,3 +107,7 @@ def test_unobservable_system_kalman_filter():
     sys_model = ct.ss(A, np.eye(2), C, np.zeros((1,2)))
     with pytest.raises(ValueError, match="Failed to solve Riccati equation"):
         synthesis.design_kalman_filter(sys_model, Qn, Rn)
+
+def test_validate_matrix_invalid_dimension():
+    with pytest.raises(ValueError, match="Matrix must be a 1D or 2D array."):
+        synthesis._validate_matrix(np.ones((2,2,2)))

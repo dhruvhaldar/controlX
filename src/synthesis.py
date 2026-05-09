@@ -12,6 +12,8 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
         raise ValueError(f"{name} must be a numeric array.")
 
     matrix = np.atleast_2d(matrix)
+    if matrix.ndim > 2:
+        raise ValueError(f"{name} must be a 1D or 2D array.")
     if not np.isfinite(matrix).all():
         raise ValueError(f"{name} must contain only finite numbers.")
     if matrix.shape[0] != matrix.shape[1]:
