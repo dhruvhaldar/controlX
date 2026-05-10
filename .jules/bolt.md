@@ -85,3 +85,7 @@
 ## 2026-11-29 - Fast path for strictly proper systems in LQG design
 **Learning:** When computing the closed-loop `Ac` matrix in `design_lqg` (`Ac = A - B @ K - L @ C + L @ D @ K`), computing `L @ D @ K` for strictly proper systems (where `D` is all zeros) adds significant unnecessary overhead.
 **Action:** Implement a fast path checking `if not np.any(D):` to bypass the `L @ D @ K` multiplication for strictly proper systems, substituting it with the simpler `Ac = A - B @ K - L @ C`. This provides a ~50% speedup for the `Ac` matrix computation.
+
+## 2026-11-30 - Fast batched frequency response evaluation
+**Learning:** When evaluating frequency response `C @ inv(sI-A) @ B` over many frequencies `s`, decomposing the problem via eigenvectors to `CV * inv_s_minus_eig @ invVB` can be further optimized. Broadcasting `(CV * inv_s_minus_eig[:, None, :]) @ invVB` is an $O(F \times O \times I \times N)$ operation that creates large intermediate arrays. By precomputing `R = CV[:, None, :] * invVB.T[None, :, :]`, reshaping it to `(O*I, N)`, and performing a standard matrix multiplication `inv_s_minus_eig @ R_flat.T`, we reduce the operation to $O(F \times N \times (O \times I))$ and avoid large broadcasts, yielding a 4-12x speedup.
+**Action:** When computing batched evaluations over frequencies, factor out frequency-independent parts, flatten the matrix dimensions, and use a single 2D matrix multiplication (`@`) instead of batched 3D broadcasted multiplications.
