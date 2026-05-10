@@ -94,3 +94,7 @@
 **Vulnerability:** The `_validate_matrix` function failed to validate the `ndim` of matrix inputs, leading to an unhandled `LinAlgError` from `numpy.linalg.cholesky` when 3D arrays were provided, which resulted in a misleading error message and potential vulnerability in matrix operations down the line.
 **Learning:** In control robustness operations, failing to explicitly validate matrix dimensionalities before passing them to internal mathematical functions (like Cholesky decompositions) can result in framework-level exception leakage.
 **Prevention:** Always explicitly validate that matrix inputs are at most 2D (using `matrix.ndim <= 2`) and raise a domain-specific `ValueError` to fail securely.
+## 2024-05-30 - Unvalidated Matrix Dimensionality Framework Exception Leakage
+**Vulnerability:** Matrices with >2 dimensions bypass square matrix checks but trigger unhandled framework-level exceptions in downstream functions (like `np.linalg.cholesky`, `np.linalg.solve`, or `np.linalg.norm`).
+**Learning:** In ControlX, always explicitly validate that matrix inputs are at most 2D (e.g., using `if matrix.ndim > 2: raise ValueError(...)`) before passing them to internal mathematical functions or framework methods.
+**Prevention:** Explicitly bound matrix dimensionality to a maximum of 2D when validating inputs via `ndim` checks right after converting to array/atleast_2d.

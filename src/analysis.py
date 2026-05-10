@@ -154,6 +154,8 @@ def relative_gain_array(G):
         raise ValueError("Gain matrix must be a numeric array.")
 
     G_arr = np.atleast_2d(G_arr)
+    if G_arr.ndim > 2:
+        raise ValueError("Gain matrix must be a 1D or 2D array.")
 
     if not np.isfinite(G_arr).all():
         raise ValueError("Gain matrix must contain only finite numbers.")
