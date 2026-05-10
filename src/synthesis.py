@@ -141,6 +141,8 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
         raise ValueError("Matrix G must be a numeric array.")
 
     G = np.atleast_2d(G)
+    if G.ndim > 2:
+        raise ValueError("Matrix G must be a 1D or 2D array.")
     if not np.isfinite(G).all():
         raise ValueError("Matrix G must contain only finite numbers.")
     if G.shape[0] != sys.nstates:
