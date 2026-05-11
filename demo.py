@@ -71,7 +71,7 @@ def run_demo():
     plt.xlabel("Frequency (rad/s)")
     plt.ylabel("Singular Values")
     plt.grid(True)
-    plt.savefig("ControlX/images/sigma_plot.png")
+    plt.savefig("images/sigma_plot.png")
     plt.close()
     print("Saved sigma_plot.png")
 
@@ -112,7 +112,7 @@ def run_demo():
     plt.title("LQG Step Response (r1 -> y)")
     plt.legend()
     plt.grid(True)
-    plt.savefig("ControlX/images/lqg_step_response.png")
+    plt.savefig("images/lqg_step_response.png")
     plt.close()
     print("Saved lqg_step_response.png")
 
@@ -165,7 +165,7 @@ def run_demo():
     plt.legend()
     plt.grid(True)
 
-    plt.savefig("ControlX/images/mpc_simulation.png")
+    plt.savefig("images/mpc_simulation.png")
     plt.close()
     print("Saved mpc_simulation.png")
 
@@ -188,7 +188,7 @@ def run_demo():
     plt.xlabel("Frequency (rad/s)")
     plt.ylabel("Maximum Singular Value of S")
     plt.grid(True)
-    plt.savefig("ControlX/images/sensitivity_plot.png")
+    plt.savefig("images/sensitivity_plot.png")
     plt.close()
     print("Saved sensitivity_plot.png")
 

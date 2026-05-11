@@ -15,6 +15,10 @@ def calculate_poles(sys):
     if not isinstance(sys, (ct.StateSpace, ct.TransferFunction)):
         raise TypeError("sys must be a control.StateSpace or control.TransferFunction object.")
 
+    if isinstance(sys, ct.StateSpace):
+        if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+
     if isinstance(sys, ct.StateSpace) and getattr(sys, 'E', None) is None:
         return np.linalg.eigvals(sys.A)
     return ct.poles(sys)
@@ -32,6 +36,10 @@ def calculate_zeros(sys):
     if not isinstance(sys, (ct.StateSpace, ct.TransferFunction)):
         raise TypeError("sys must be a control.StateSpace or control.TransferFunction object.")
 
+    if isinstance(sys, ct.StateSpace):
+        if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+
     return ct.zeros(sys)
 
 def calculate_singular_values(sys, omega=0):
@@ -48,6 +56,10 @@ def calculate_singular_values(sys, omega=0):
     """
     if not isinstance(sys, (ct.StateSpace, ct.TransferFunction)):
         raise TypeError("sys must be a control.StateSpace or control.TransferFunction object.")
+
+    if isinstance(sys, ct.StateSpace):
+        if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     try:
         omega_arr = np.array(np.atleast_1d(omega), dtype=float)
@@ -184,6 +196,10 @@ def system_gain(sys, omega=0):
     """
     if not isinstance(sys, (ct.StateSpace, ct.TransferFunction)):
         raise TypeError("sys must be a control.StateSpace or control.TransferFunction object.")
+
+    if isinstance(sys, ct.StateSpace):
+        if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     try:
         omega_val = float(omega)

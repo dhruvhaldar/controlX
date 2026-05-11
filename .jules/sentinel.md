@@ -98,3 +98,7 @@
 **Vulnerability:** Matrices with >2 dimensions bypass square matrix checks but trigger unhandled framework-level exceptions in downstream functions (like `np.linalg.cholesky`, `np.linalg.solve`, or `np.linalg.norm`).
 **Learning:** In ControlX, always explicitly validate that matrix inputs are at most 2D (e.g., using `if matrix.ndim > 2: raise ValueError(...)`) before passing them to internal mathematical functions or framework methods.
 **Prevention:** Explicitly bound matrix dimensionality to a maximum of 2D when validating inputs via `ndim` checks right after converting to array/atleast_2d.
+## 2026-05-11 - Prevent DoS via unbounded analysis system dimensions
+**Vulnerability:** The analysis functions (`calculate_poles`, `calculate_zeros`, `calculate_singular_values`, `system_gain`) allowed arbitrarily large system dimensions (`nstates`, `ninputs`, `noutputs`) to be processed.
+**Learning:** Functions performing complex operations like eigenvalue decomposition (`calculate_poles`), generalized eigenvalue problems (`calculate_zeros`), or evaluating frequency responses over large arrays are highly sensitive to matrix dimensions. Providing excessively large state or input/output sizes leads to massive CPU consumption and memory allocation, causing the application to crash or freeze (OOM/DoS) due to the $O(N^3)$ computational complexity.
+**Prevention:** Enforce a strict upper bound limit on problem structural sizes such as `sys.nstates`, `sys.ninputs`, and `sys.noutputs` (e.g., 500) at the API boundary, raising a `ValueError` for resource exhaustion.

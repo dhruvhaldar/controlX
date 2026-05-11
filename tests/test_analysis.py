@@ -109,3 +109,14 @@ def test_calculate_singular_values_too_large_omega():
 
     with pytest.raises(ValueError, match="omega array is too large"):
         analysis.calculate_singular_values(sys, omega=np.arange(10001))
+
+def test_dimension_limits():
+    sys = ct.ss(np.zeros((501, 501)), np.zeros((501, 1)), np.zeros((1, 501)), np.zeros((1, 1)))
+    with pytest.raises(ValueError, match="System dimensions are too large"):
+        analysis.calculate_poles(sys)
+    with pytest.raises(ValueError, match="System dimensions are too large"):
+        analysis.calculate_zeros(sys)
+    with pytest.raises(ValueError, match="System dimensions are too large"):
+        analysis.calculate_singular_values(sys, omega=0)
+    with pytest.raises(ValueError, match="System dimensions are too large"):
+        analysis.system_gain(sys, omega=0)
