@@ -111,3 +111,28 @@ def test_unobservable_system_kalman_filter():
 def test_validate_matrix_invalid_dimension():
     with pytest.raises(ValueError, match="Matrix must be a 1D or 2D array."):
         synthesis._validate_matrix(np.ones((2,2,2)))
+
+from unittest.mock import patch
+import scipy.linalg
+
+def test_lqr_singular_matrix():
+    # Provide an uncontrollable system (B=0) so Bt_S is 0, making M = R + Bt_S*B = 0
+    # when R is 0. This forces the solver to encounter a singular matrix.
+    sys_model = ct.ss([[-1]], [[0]], [[1]], [[0]], dt=0.1)
+    Q = np.array([[1]])
+    R = np.array([[0]])
+    with pytest.raises(ValueError, match="Failed to compute LQR gain: Matrix is singular."):
+        synthesis.design_lqr(sys_model, Q, R)
+
+def test_kalman_singular_matrix():
+    # To force the singular matrix failure after a successful Riccati solve, we mock the solver.
+    sys_model = ct.ss([[-1]], [[1]], [[1]], [[0]])
+    Qn = np.array([[1]])
+    Rn = np.array([[0]])
+
+    def mock_solve_continuous_are(*args, **kwargs):
+        return np.eye(1)
+
+    with patch("scipy.linalg.solve_continuous_are", side_effect=mock_solve_continuous_are):
+        with pytest.raises(ValueError, match="Failed to compute Kalman gain: Matrix is singular."):
+            synthesis.design_kalman_filter(sys_model, Qn, Rn)

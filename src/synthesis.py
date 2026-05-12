@@ -83,7 +83,10 @@ def design_lqr(sys, Q, R):
             c, low = scipy.linalg.cho_factor(R)
             K = scipy.linalg.cho_solve((c, low), Bt_S)
         except scipy.linalg.LinAlgError:
-            K = np.linalg.solve(R, Bt_S)
+            try:
+                K = np.linalg.solve(R, Bt_S)
+            except np.linalg.LinAlgError:
+                raise ValueError("Failed to compute LQR gain: Matrix is singular.")
 
         E = np.linalg.eigvals(sys.A - sys.B @ K)
     else:
@@ -101,7 +104,10 @@ def design_lqr(sys, Q, R):
             c, low = scipy.linalg.cho_factor(M)
             K = scipy.linalg.cho_solve((c, low), Bt_S @ sys.A)
         except scipy.linalg.LinAlgError:
-            K = np.linalg.solve(M, Bt_S @ sys.A)
+            try:
+                K = np.linalg.solve(M, Bt_S @ sys.A)
+            except np.linalg.LinAlgError:
+                raise ValueError("Failed to compute LQR gain: Matrix is singular.")
 
         E = np.linalg.eigvals(sys.A - sys.B @ K)
     return K, S, E
@@ -172,7 +178,10 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
         c, low = scipy.linalg.cho_factor(Rn)
         L = scipy.linalg.cho_solve((c, low), CP).T
     except scipy.linalg.LinAlgError:
-        L = np.linalg.solve(Rn, CP).T
+        try:
+            L = np.linalg.solve(Rn, CP).T
+        except np.linalg.LinAlgError:
+            raise ValueError("Failed to compute Kalman gain: Matrix is singular.")
 
     E = np.linalg.eigvals(sys.A - L @ sys.C)
     return L, P, E
