@@ -16,6 +16,13 @@ def sensitivity_function(G, K):
     if not isinstance(G, (ct.StateSpace, ct.TransferFunction)) or not isinstance(K, (ct.StateSpace, ct.TransferFunction)):
         raise TypeError("G and K must be control.StateSpace or control.TransferFunction objects.")
 
+    if isinstance(G, ct.StateSpace):
+        if G.nstates > 500 or G.ninputs > 500 or G.noutputs > 500:
+            raise ValueError("Plant dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(K, ct.StateSpace):
+        if K.nstates > 500 or K.ninputs > 500 or K.noutputs > 500:
+            raise ValueError("Controller dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+
     # ⚡ Bolt Optimization: Fast computation of sensitivity function for StateSpace models.
     # Bypasses the significant overhead of ct.feedback and object creation
     # by directly computing the resulting state space matrices.
@@ -87,6 +94,13 @@ def complementary_sensitivity_function(G, K):
     if not isinstance(G, (ct.StateSpace, ct.TransferFunction)) or not isinstance(K, (ct.StateSpace, ct.TransferFunction)):
         raise TypeError("G and K must be control.StateSpace or control.TransferFunction objects.")
 
+    if isinstance(G, ct.StateSpace):
+        if G.nstates > 500 or G.ninputs > 500 or G.noutputs > 500:
+            raise ValueError("Plant dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(K, ct.StateSpace):
+        if K.nstates > 500 or K.ninputs > 500 or K.noutputs > 500:
+            raise ValueError("Controller dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+
     # ⚡ Bolt Optimization: Fast computation of complementary sensitivity function for StateSpace models.
     # Bypasses the significant overhead of ct.feedback and object creation
     # by directly computing the resulting state space matrices.
@@ -138,6 +152,10 @@ def calculate_hinf_norm(sys, omega=None):
     """
     if not isinstance(sys, (ct.StateSpace, ct.TransferFunction)):
         raise TypeError("sys must be a control.StateSpace or control.TransferFunction object.")
+
+    if isinstance(sys, ct.StateSpace):
+        if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     if omega is None:
         omega = np.logspace(-2, 2, 1000)

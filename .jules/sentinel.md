@@ -106,3 +106,7 @@
 **Vulnerability:** Unhandled `np.linalg.LinAlgError` during LQR/Kalman gain fallback calculations (e.g. `np.linalg.solve`) leaked internal numpy/scipy exceptions and stack traces when encountering singular matrices.
 **Learning:** Fallback calculations must also be fully shielded with exception handling to prevent leaking of sensitive framework internals when unexpected invalid or singular input arrays bypass earlier logic.
 **Prevention:** Always wrap terminal mathematical solving steps (like `np.linalg.solve`) in `try...except np.linalg.LinAlgError` and raise a domain-specific `ValueError`.
+## 2024-06-25 - Prevent DoS via unbounded robustness system dimensions
+**Vulnerability:** The robustness functions (`sensitivity_function`, `complementary_sensitivity_function`, `calculate_hinf_norm`) allowed arbitrarily large system dimensions (`nstates`, `ninputs`, `noutputs`) to be processed.
+**Learning:** Functions performing complex operations like evaluating frequency responses or system gains over large arrays are highly sensitive to matrix dimensions. Providing excessively large state or input/output sizes leads to massive CPU consumption and memory allocation, causing the application to crash or freeze (OOM/DoS) due to computational complexity.
+**Prevention:** Enforce a strict upper bound limit on problem structural sizes such as `sys.nstates`, `sys.ninputs`, and `sys.noutputs` (e.g., 500) at the API boundary, raising a `ValueError` for resource exhaustion.

@@ -68,3 +68,24 @@ def test_calculate_hinf_norm_too_large_omega():
 
     with pytest.raises(ValueError, match="omega array is too large"):
         robustness.calculate_hinf_norm(sys, omega=np.arange(10001))
+
+def test_too_large_system_dimensions():
+    sys = ct.ss(np.zeros((501, 501)), np.zeros((501, 1)), np.zeros((1, 501)), np.zeros((1, 1)))
+    K = ct.ss(np.zeros((1, 1)), np.zeros((1, 1)), np.zeros((1, 1)), np.zeros((1, 1)))
+
+    with pytest.raises(ValueError, match="Plant dimensions are too large"):
+        robustness.sensitivity_function(sys, K)
+
+    with pytest.raises(ValueError, match="Plant dimensions are too large"):
+        robustness.complementary_sensitivity_function(sys, K)
+
+    with pytest.raises(ValueError, match="Controller dimensions are too large"):
+        robustness.sensitivity_function(K, sys)
+
+    with pytest.raises(ValueError, match="Controller dimensions are too large"):
+        robustness.complementary_sensitivity_function(K, sys)
+
+def test_hinf_norm_too_large_system():
+    sys = ct.ss(np.zeros((501, 501)), np.zeros((501, 1)), np.zeros((1, 501)), np.zeros((1, 1)))
+    with pytest.raises(ValueError, match="System dimensions are too large"):
+        robustness.calculate_hinf_norm(sys)
