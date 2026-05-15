@@ -55,12 +55,22 @@ def test_relative_gain_array():
     with pytest.raises(ValueError, match="Cannot compute RGA: System gain matrix is singular."):
         analysis.relative_gain_array(G)
 
+    # Non-square matrix
+    G_non_square = np.array([[1, 2, 3], [4, 5, 6]])
+    with pytest.raises(ValueError, match="Gain matrix must be a square matrix."):
+        analysis.relative_gain_array(G_non_square)
+
+    # Too large matrix
+    G_large = np.eye(501)
+    with pytest.raises(ValueError, match="Gain matrix dimensions are too large"):
+        analysis.relative_gain_array(G_large)
+
     # Invalid string matrix
     with pytest.raises(ValueError, match="Gain matrix must be a numeric array."):
         analysis.relative_gain_array("invalid")
 
     # Invalid 1D array
-    with pytest.raises(ValueError, match="Cannot compute RGA: System gain matrix is singular."):
+    with pytest.raises(ValueError, match="Gain matrix must be a square matrix."):
         analysis.relative_gain_array([1, 2])
 
     # Matrix with NaNs

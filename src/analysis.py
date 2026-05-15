@@ -169,6 +169,12 @@ def relative_gain_array(G):
     if G_arr.ndim > 2:
         raise ValueError("Gain matrix must be a 1D or 2D array.")
 
+    if G_arr.shape[0] != G_arr.shape[1]:
+        raise ValueError("Gain matrix must be a square matrix.")
+
+    if G_arr.shape[0] > 500 or G_arr.shape[1] > 500:
+        raise ValueError("Gain matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+
     if not np.isfinite(G_arr).all():
         raise ValueError("Gain matrix must contain only finite numbers.")
 

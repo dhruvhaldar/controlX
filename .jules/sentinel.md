@@ -110,3 +110,7 @@
 **Vulnerability:** The robustness functions (`sensitivity_function`, `complementary_sensitivity_function`, `calculate_hinf_norm`) allowed arbitrarily large system dimensions (`nstates`, `ninputs`, `noutputs`) to be processed.
 **Learning:** Functions performing complex operations like evaluating frequency responses or system gains over large arrays are highly sensitive to matrix dimensions. Providing excessively large state or input/output sizes leads to massive CPU consumption and memory allocation, causing the application to crash or freeze (OOM/DoS) due to computational complexity.
 **Prevention:** Enforce a strict upper bound limit on problem structural sizes such as `sys.nstates`, `sys.ninputs`, and `sys.noutputs` (e.g., 500) at the API boundary, raising a `ValueError` for resource exhaustion.
+## 2025-05-30 - Prevent DoS via unbounded matrix inputs in robustness functions
+**Vulnerability:** The `small_gain_theorem_check` and `relative_gain_array` allowed arbitrarily large matrix inputs (e.g. 10000x10000) to be processed.
+**Learning:** Functions performing complex operations like computing norms or solving systems over large arrays are highly sensitive to matrix dimensions. Providing excessively large inputs leads to massive CPU consumption and memory allocation, causing the application to crash or freeze (OOM/DoS) due to the $O(N^3)$ computational complexity.
+**Prevention:** Enforce a strict upper bound limit on problem structural sizes such as matrix dimensions (e.g., 500) at the API boundary, raising a `ValueError` for resource exhaustion.
