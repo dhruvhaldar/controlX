@@ -192,9 +192,16 @@ def calculate_hinf_norm(sys, omega=None):
             eigvals, V = np.linalg.eig(sys.A)
 
             # ⚡ Bolt Optimization: Use 1-norm for condition number, which avoids a slow SVD.
-            if np.linalg.cond(V, 1) < 1e10:
+            # Reuse the explicit inverse for both the condition number check and the multiplication.
+            try:
+                invV = np.linalg.inv(V)
+                cond_V = np.linalg.norm(V, 1) * np.linalg.norm(invV, 1)
+            except np.linalg.LinAlgError:
+                cond_V = np.inf
+
+            if cond_V < 1e10:
                 CV = sys.C @ V
-                invVB = np.linalg.solve(V, sys.B)
+                invVB = invV @ sys.B
                 s_minus_eig = s[:, np.newaxis] - eigvals
                 inv_s_minus_eig = 1.0 / s_minus_eig
                 # ⚡ Bolt Optimization: Use matmul with reshaped flat arrays instead of batched matmul.
