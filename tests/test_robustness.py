@@ -85,6 +85,12 @@ def test_too_large_system_dimensions():
     with pytest.raises(ValueError, match="Controller dimensions are too large"):
         robustness.complementary_sensitivity_function(K, sys)
 
+    with pytest.raises(ValueError, match="M matrix dimensions are too large"):
+        robustness.small_gain_theorem_check(np.eye(501), 0.5)
+
+    with pytest.raises(ValueError, match="Delta matrix dimensions are too large"):
+        robustness.small_gain_theorem_check(0.5, np.eye(501))
+
 def test_hinf_norm_too_large_system():
     sys = ct.ss(np.zeros((501, 501)), np.zeros((501, 1)), np.zeros((1, 501)), np.zeros((1, 1)))
     with pytest.raises(ValueError, match="System dimensions are too large"):

@@ -266,6 +266,8 @@ def small_gain_theorem_check(M, Delta, omega=None):
             raise ValueError("M must be a control system or a numeric matrix/scalar.")
         if M_arr.ndim > 2:
             raise ValueError("M must be a 1D or 2D array.")
+        if M_arr.ndim > 0 and (M_arr.shape[0] > 500 or (M_arr.ndim > 1 and M_arr.shape[1] > 500)):
+            raise ValueError("M matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
         if not np.isfinite(M_arr).all():
             raise ValueError("M must contain only finite numbers.")
         norm_M = np.linalg.norm(M_arr, 2) # Assume matrix gain
@@ -279,6 +281,8 @@ def small_gain_theorem_check(M, Delta, omega=None):
             raise ValueError("Delta must be a control system or a numeric matrix/scalar.")
         if Delta_arr.ndim > 2:
             raise ValueError("Delta must be a 1D or 2D array.")
+        if Delta_arr.ndim > 0 and (Delta_arr.shape[0] > 500 or (Delta_arr.ndim > 1 and Delta_arr.shape[1] > 500)):
+            raise ValueError("Delta matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
         if not np.isfinite(Delta_arr).all():
             raise ValueError("Delta must contain only finite numbers.")
         norm_Delta = np.max(np.abs(Delta_arr))
