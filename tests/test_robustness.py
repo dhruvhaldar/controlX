@@ -95,3 +95,15 @@ def test_hinf_norm_too_large_system():
     sys = ct.ss(np.zeros((501, 501)), np.zeros((501, 1)), np.zeros((1, 501)), np.zeros((1, 1)))
     with pytest.raises(ValueError, match="System dimensions are too large"):
         robustness.calculate_hinf_norm(sys)
+
+def test_sensitivity_non_square():
+    # G: 1 input, 2 outputs.
+    G = ct.ss([[-1]], [[1]], [[1], [1]], [[0], [0]])
+    # K: 1 input, 1 output.
+    K = ct.ss([[-2]], [[1]], [[1]], [[0]])
+
+    with pytest.raises(ValueError, match="System loop transfer matrix must be square"):
+        robustness.sensitivity_function(G, K)
+
+    with pytest.raises(ValueError, match="System loop transfer matrix must be square"):
+        robustness.complementary_sensitivity_function(G, K)

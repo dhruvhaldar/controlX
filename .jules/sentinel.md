@@ -114,3 +114,7 @@
 **Vulnerability:** The `small_gain_theorem_check` and `relative_gain_array` allowed arbitrarily large matrix inputs (e.g. 10000x10000) to be processed.
 **Learning:** Functions performing complex operations like computing norms or solving systems over large arrays are highly sensitive to matrix dimensions. Providing excessively large inputs leads to massive CPU consumption and memory allocation, causing the application to crash or freeze (OOM/DoS) due to the $O(N^3)$ computational complexity.
 **Prevention:** Enforce a strict upper bound limit on problem structural sizes such as matrix dimensions (e.g., 500) at the API boundary, raising a `ValueError` for resource exhaustion.
+## 2025-05-31 - Prevent Exception Leakage in Robustness Functions via Dimension Validation
+**Vulnerability:** The `sensitivity_function` and `complementary_sensitivity_function` failed to validate that the loop transfer matrix `L = G * K` is square. This allowed non-square systems to bypass validation and trigger unhandled `ValueError` or `ControlDimension` exceptions deep inside the numpy or control framework.
+**Learning:** In control robustness operations, failing to explicitly validate matrix dimensionalities before passing them to internal mathematical functions (like `np.linalg.inv` or `ct.feedback`) can result in framework-level exception leakage, violating the fail securely principle.
+**Prevention:** Always explicitly validate that system loop transfer matrices are square (using `L.noutputs == L.ninputs`) and raise a domain-specific `ValueError` to fail securely.

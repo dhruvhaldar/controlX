@@ -28,6 +28,8 @@ def sensitivity_function(G, K):
     # by directly computing the resulting state space matrices.
     if isinstance(G, ct.StateSpace) and isinstance(K, ct.StateSpace):
         L = G * K
+        if L.noutputs != L.ninputs:
+            raise ValueError("System loop transfer matrix must be square (noutputs == ninputs) to compute sensitivity functions.")
 
         # ⚡ Bolt Optimization: Fast path for strictly proper systems (D=0)
         # Bypasses the matrix inversion and identity matrix additions completely,
@@ -55,6 +57,8 @@ def sensitivity_function(G, K):
         return ct.ss(A_s, B_s, C_s, D_s, L.dt)
 
     L = G * K
+    if L.noutputs != L.ninputs:
+        raise ValueError("System loop transfer matrix must be square (noutputs == ninputs) to compute sensitivity functions.")
     # Sensitivity Function S = (I + L)^-1
     # control.feedback returns L / (1+L) if sign=-1
     # To get (1+L)^-1, we can compute 1 - T
@@ -106,6 +110,8 @@ def complementary_sensitivity_function(G, K):
     # by directly computing the resulting state space matrices.
     if isinstance(G, ct.StateSpace) and isinstance(K, ct.StateSpace):
         L = G * K
+        if L.noutputs != L.ninputs:
+            raise ValueError("System loop transfer matrix must be square (noutputs == ninputs) to compute sensitivity functions.")
 
         # ⚡ Bolt Optimization: Fast path for strictly proper systems (D=0)
         # Bypasses the matrix inversion and identity matrix additions completely.
@@ -132,6 +138,8 @@ def complementary_sensitivity_function(G, K):
         return ct.ss(A_T, B_T, C_T, D_T, L.dt)
 
     L = G * K
+    if L.noutputs != L.ninputs:
+        raise ValueError("System loop transfer matrix must be square (noutputs == ninputs) to compute sensitivity functions.")
     # T = L / (1 + L)
     # Using feedback(L, I) or feedback(L, 1) if SISO
     n_inputs = L.ninputs
