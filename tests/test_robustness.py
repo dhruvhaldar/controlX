@@ -103,3 +103,12 @@ def test_non_square_loop_matrix():
         robustness.sensitivity_function(G, K)
     with pytest.raises(ValueError, match="Loop transfer matrix must be square."):
         robustness.complementary_sensitivity_function(G, K)
+
+def test_incompatible_dimensions():
+    # G expects 1 input, K provides 2 outputs
+    G = ct.tf([[[1], [1]]], [[[1, 1], [1, 2]]])
+    K = ct.tf([[[1], [1]]], [[[1, 1], [1, 2]]])
+    with pytest.raises(ValueError, match="Incompatible dimensions: Plant inputs must match Controller outputs."):
+        robustness.sensitivity_function(G, K)
+    with pytest.raises(ValueError, match="Incompatible dimensions: Plant inputs must match Controller outputs."):
+        robustness.complementary_sensitivity_function(G, K)
