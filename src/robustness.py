@@ -23,6 +23,9 @@ def sensitivity_function(G, K):
         if K.nstates > 500 or K.ninputs > 500 or K.noutputs > 500:
             raise ValueError("Controller dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
+    if G.ninputs != K.noutputs:
+        raise ValueError("Incompatible dimensions: Plant inputs must match Controller outputs.")
+
     # ⚡ Bolt Optimization: Fast computation of sensitivity function for StateSpace models.
     # Bypasses the significant overhead of ct.feedback and object creation
     # by directly computing the resulting state space matrices.
@@ -104,6 +107,9 @@ def complementary_sensitivity_function(G, K):
     if isinstance(K, ct.StateSpace):
         if K.nstates > 500 or K.ninputs > 500 or K.noutputs > 500:
             raise ValueError("Controller dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+
+    if G.ninputs != K.noutputs:
+        raise ValueError("Incompatible dimensions: Plant inputs must match Controller outputs.")
 
     # ⚡ Bolt Optimization: Fast computation of complementary sensitivity function for StateSpace models.
     # Bypasses the significant overhead of ct.feedback and object creation
