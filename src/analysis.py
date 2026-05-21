@@ -19,9 +19,12 @@ def calculate_poles(sys):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
             raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
-    if isinstance(sys, ct.StateSpace) and getattr(sys, 'E', None) is None:
-        return np.linalg.eigvals(sys.A)
-    return ct.poles(sys)
+    try:
+        if isinstance(sys, ct.StateSpace) and getattr(sys, 'E', None) is None:
+            return np.linalg.eigvals(sys.A)
+        return ct.poles(sys)
+    except Exception:
+        raise ValueError("Failed to calculate poles: System matrix is invalid or computation did not converge.") from None
 
 def calculate_zeros(sys):
     """
@@ -40,7 +43,10 @@ def calculate_zeros(sys):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
             raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
-    return ct.zeros(sys)
+    try:
+        return ct.zeros(sys)
+    except Exception:
+        raise ValueError("Failed to calculate zeros: System matrix is invalid or computation did not converge.") from None
 
 def calculate_singular_values(sys, omega=0):
     """
