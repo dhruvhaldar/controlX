@@ -113,9 +113,7 @@ def calculate_singular_values(sys, omega=0):
                 R = CV[:, np.newaxis, :] * invVB.T[np.newaxis, :, :]
                 R_flat = R.reshape(sys.noutputs * sys.ninputs, sys.nstates)
                 resp_flat = inv_s_minus_eig @ R_flat.T
-                resp_T = resp_flat.reshape(len(omega_arr), sys.noutputs, sys.ninputs)
-                if np.any(sys.D):
-                    resp_T = resp_T + sys.D
+                resp_T = resp_flat.reshape(len(omega_arr), sys.noutputs, sys.ninputs) + sys.D
             else:
                 # Fallback for non-diagonalizable matrices
                 sI_minus_A = np.empty((len(omega_arr), sys.nstates, sys.nstates), dtype=complex)
@@ -123,9 +121,7 @@ def calculate_singular_values(sys, omega=0):
                 sI_minus_A[:, np.arange(sys.nstates), np.arange(sys.nstates)] += s[:, np.newaxis]
                 B_b = np.broadcast_to(sys.B, (len(omega_arr), sys.nstates, sys.ninputs))
                 X = np.linalg.solve(sI_minus_A, B_b)
-                resp_T = sys.C @ X
-                if np.any(sys.D):
-                    resp_T = resp_T + sys.D
+                resp_T = sys.C @ X + sys.D
 
             if sys.ninputs == 1 and sys.noutputs == 1:
                 S = np.abs(resp_T).reshape(-1, 1)

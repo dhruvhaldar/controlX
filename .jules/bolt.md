@@ -93,3 +93,7 @@
 ## 2026-12-01 - Reuse explicit matrix inverse for condition number and multiplication
 **Learning:** Calling `np.linalg.cond(V, 1)` internally calculates the matrix inverse `invV = np.linalg.inv(V)` and then computes the condition number as `norm(V) * norm(invV)`. If we immediately follow a condition check `if cond < 1e10:` with a linear solve `invVB = np.linalg.solve(V, B)`, we perform redundant decomposition work.
 **Action:** When a matrix's condition number is checked and it is subsequently used in a linear solve like `invVB = np.linalg.solve(V, B)`, explicitly compute `invV = np.linalg.inv(V)` first. Use it to calculate the condition number manually (`norm(V, 1) * norm(invV, 1)`), and then reuse it for the multiplication `invVB = invV @ B` to achieve a ~30-40% speedup.
+
+## 2026-12-01 - Fast path for strictly proper systems in batched frequency response
+**Learning:** When calculating batched frequency responses `resp_T = resp_flat.reshape(...) + sys.D`, unconditionally adding the `D` matrix to a large 3D array in NumPy causes unnecessary memory allocations and is significantly slower when the system is strictly proper (i.e., `sys.D` is mostly zeros).
+**Action:** When performing batched evaluations, introduce a fast path to skip the matrix addition entirely (`if np.any(sys.D): resp_T = resp_T + sys.D`) when `sys.D` is mostly zeros.
