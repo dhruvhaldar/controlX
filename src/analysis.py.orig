@@ -19,12 +19,9 @@ def calculate_poles(sys):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
             raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
-    try:
-        if isinstance(sys, ct.StateSpace) and getattr(sys, 'E', None) is None:
-            return np.linalg.eigvals(sys.A)
-        return ct.poles(sys)
-    except Exception:
-        raise ValueError("Failed to calculate poles: System matrix is invalid or computation did not converge.") from None
+    if isinstance(sys, ct.StateSpace) and getattr(sys, 'E', None) is None:
+        return np.linalg.eigvals(sys.A)
+    return ct.poles(sys)
 
 def calculate_zeros(sys):
     """
@@ -43,10 +40,7 @@ def calculate_zeros(sys):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
             raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
-    try:
-        return ct.zeros(sys)
-    except Exception:
-        raise ValueError("Failed to calculate zeros: System matrix is invalid or computation did not converge.") from None
+    return ct.zeros(sys)
 
 def calculate_singular_values(sys, omega=0):
     """
@@ -119,9 +113,7 @@ def calculate_singular_values(sys, omega=0):
                 R = CV[:, np.newaxis, :] * invVB.T[np.newaxis, :, :]
                 R_flat = R.reshape(sys.noutputs * sys.ninputs, sys.nstates)
                 resp_flat = inv_s_minus_eig @ R_flat.T
-                resp_T = resp_flat.reshape(len(omega_arr), sys.noutputs, sys.ninputs)
-                if np.any(sys.D):
-                    resp_T = resp_T + sys.D
+                resp_T = resp_flat.reshape(len(omega_arr), sys.noutputs, sys.ninputs) + sys.D
             else:
                 # Fallback for non-diagonalizable matrices
                 sI_minus_A = np.empty((len(omega_arr), sys.nstates, sys.nstates), dtype=complex)
@@ -129,9 +121,7 @@ def calculate_singular_values(sys, omega=0):
                 sI_minus_A[:, np.arange(sys.nstates), np.arange(sys.nstates)] += s[:, np.newaxis]
                 B_b = np.broadcast_to(sys.B, (len(omega_arr), sys.nstates, sys.ninputs))
                 X = np.linalg.solve(sI_minus_A, B_b)
-                resp_T = sys.C @ X
-                if np.any(sys.D):
-                    resp_T = resp_T + sys.D
+                resp_T = sys.C @ X + sys.D
 
             if sys.ninputs == 1 and sys.noutputs == 1:
                 S = np.abs(resp_T).reshape(-1, 1)
