@@ -133,8 +133,8 @@ def calculate_singular_values(sys, omega=0):
                 if np.any(sys.D):
                     resp_T = resp_T + sys.D
 
-            if sys.ninputs == 1 and sys.noutputs == 1:
-                S = np.abs(resp_T).reshape(-1, 1)
+            if sys.ninputs == 1 or sys.noutputs == 1:
+                S = np.linalg.norm(resp_T, axis=(1, 2)).reshape(-1, 1)
             else:
                 S = np.linalg.svd(resp_T, compute_uv=False)
         except np.linalg.LinAlgError:
@@ -146,7 +146,10 @@ def calculate_singular_values(sys, omega=0):
                 S = S.reshape(-1, 1)
             else:
                 resp_T = np.transpose(resp, (2, 0, 1))
-                S = np.linalg.svd(resp_T, compute_uv=False)
+                if sys.ninputs == 1 or sys.noutputs == 1:
+                    S = np.linalg.norm(resp_T, axis=(1, 2)).reshape(-1, 1)
+                else:
+                    S = np.linalg.svd(resp_T, compute_uv=False)
     else:
         resp = sys.frequency_response(omega_arr).complex
 
@@ -159,7 +162,10 @@ def calculate_singular_values(sys, omega=0):
             # MIMO case: resp is (outputs, inputs, frequencies)
             # Transpose to (frequencies, outputs, inputs) for batched svd
             resp_T = np.transpose(resp, (2, 0, 1))
-            S = np.linalg.svd(resp_T, compute_uv=False)
+            if sys.ninputs == 1 or sys.noutputs == 1:
+                S = np.linalg.norm(resp_T, axis=(1, 2)).reshape(-1, 1)
+            else:
+                S = np.linalg.svd(resp_T, compute_uv=False)
 
     # If a scalar was passed, return just the array of SVs for that frequency
     if np.isscalar(omega) or np.array(omega).ndim == 0:

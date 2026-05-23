@@ -238,8 +238,8 @@ def calculate_hinf_norm(sys, omega=None):
                 if np.any(sys.D):
                     resp_T = resp_T + sys.D
 
-            if sys.ninputs == 1 and sys.noutputs == 1:
-                max_sv = np.max(np.abs(resp_T))
+            if sys.ninputs == 1 or sys.noutputs == 1:
+                max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
             else:
                 svs = np.linalg.svd(resp_T, compute_uv=False)
                 max_sv = np.max(svs)
@@ -251,8 +251,11 @@ def calculate_hinf_norm(sys, omega=None):
                 max_sv = np.max(np.abs(resp))
             else:
                 resp_T = np.transpose(resp, (2, 0, 1))
-                svs = np.linalg.svd(resp_T, compute_uv=False)
-                max_sv = np.max(svs)
+                if sys.ninputs == 1 or sys.noutputs == 1:
+                    max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
+                else:
+                    svs = np.linalg.svd(resp_T, compute_uv=False)
+                    max_sv = np.max(svs)
     else:
         resp = sys.frequency_response(omega_arr).complex
 
@@ -263,8 +266,11 @@ def calculate_hinf_norm(sys, omega=None):
             # MIMO case: resp is (outputs, inputs, frequencies)
             # Transpose to (frequencies, outputs, inputs) for batched svd
             resp_T = np.transpose(resp, (2, 0, 1))
-            svs = np.linalg.svd(resp_T, compute_uv=False)
-            max_sv = np.max(svs)
+            if sys.ninputs == 1 or sys.noutputs == 1:
+                max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
+            else:
+                svs = np.linalg.svd(resp_T, compute_uv=False)
+                max_sv = np.max(svs)
 
     return float(max_sv)
 
