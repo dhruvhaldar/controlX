@@ -301,7 +301,13 @@ def small_gain_theorem_check(M, Delta, omega=None):
             raise ValueError("M matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
         if not np.isfinite(M_arr).all():
             raise ValueError("M must contain only finite numbers.")
-        norm_M = np.linalg.norm(M_arr, 2) # Assume matrix gain
+
+        # ⚡ Bolt Optimization: Fast singular value calculation for SIMO and MISO systems
+        # Bypasses the expensive O(N^3) SVD computation when the matrix is a vector.
+        if M_arr.ndim < 2 or M_arr.shape[0] == 1 or M_arr.shape[1] == 1:
+            norm_M = np.linalg.norm(M_arr)
+        else:
+            norm_M = np.linalg.norm(M_arr, 2) # Assume matrix gain
 
     if isinstance(Delta, (ct.StateSpace, ct.TransferFunction)):
         norm_Delta = calculate_hinf_norm(Delta, omega)

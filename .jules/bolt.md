@@ -101,3 +101,7 @@
 ## 2026-05-23 - Fast singular value calculation for SIMO and MISO systems
 **Learning:** Calculating `np.linalg.svd` for systems with either a single input or a single output (MISO/SIMO) is unnecessarily slow. The non-zero singular value for a vector is simply its 2-norm (Frobenius norm). Calculating `np.linalg.norm(resp_T, axis=(1, 2))` bypasses the expensive O(min(O,I)^2 * max(O,I)) SVD computation and replaces it with an O(O * I) operation, providing a ~15x speedup for computing max singular values and H-infinity norms in these cases.
 **Action:** When computing singular values or H-infinity norms, implement a fast path `if sys.ninputs == 1 or sys.noutputs == 1:` that calculates `np.linalg.norm(resp_T, axis=(1, 2))` instead of using `np.linalg.svd`.
+
+## 2026-12-05 - Fast 2-norm calculation for matrix vectors
+**Learning:** Calling `np.linalg.norm(X, 2)` on a 1D vector or a 2D matrix representing a vector (e.g., shape `(N, 1)` or `(1, N)`) computes the full Singular Value Decomposition (SVD), an $O(N^3)$ operation. For vectors, the 2-norm is mathematically equivalent to the Frobenius norm (`np.linalg.norm(X)`), which computes in $O(N)$ time and is significantly faster.
+**Action:** When computing the 2-norm of a matrix representing a system gain, implement a fast path `if X.ndim < 2 or X.shape[0] == 1 or X.shape[1] == 1:` that calculates `np.linalg.norm(X)` instead of `np.linalg.norm(X, 2)` to bypass the slow SVD computation.
