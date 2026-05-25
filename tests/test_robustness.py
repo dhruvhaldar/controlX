@@ -15,6 +15,16 @@ def test_sensitivity_function():
     S = robustness.sensitivity_function(sys, K)
     assert np.allclose(ct.poles(S), [-2])
 
+def test_incompatible_timebases():
+    plant = ct.tf([1], [1, 1], inputs=1, outputs=1)
+    plant.dt = 0
+    K = ct.tf([1], [1, 1], inputs=1, outputs=1)
+    K.dt = 1
+    with pytest.raises(ValueError, match="Incompatible timebases: Plant and Controller have conflicting sampling times."):
+        robustness.sensitivity_function(plant, K)
+    with pytest.raises(ValueError, match="Incompatible timebases: Plant and Controller have conflicting sampling times."):
+        robustness.complementary_sensitivity_function(plant, K)
+
 def test_complementary_sensitivity_function():
     sys = ct.tf([1], [1, 1])
     K = ct.tf([1], [1])

@@ -26,6 +26,10 @@ def sensitivity_function(G, K):
     if G.ninputs != K.noutputs:
         raise ValueError("Incompatible dimensions: Plant inputs must match Controller outputs.")
 
+    if G.dt != K.dt and G.dt is not None and K.dt is not None:
+        if not (G.dt is True and K.dt != 0) and not (K.dt is True and G.dt != 0):
+            raise ValueError("Incompatible timebases: Plant and Controller have conflicting sampling times.")
+
     # ⚡ Bolt Optimization: Fast computation of sensitivity function for StateSpace models.
     # Bypasses the significant overhead of ct.feedback and object creation
     # by directly computing the resulting state space matrices.
@@ -110,6 +114,10 @@ def complementary_sensitivity_function(G, K):
 
     if G.ninputs != K.noutputs:
         raise ValueError("Incompatible dimensions: Plant inputs must match Controller outputs.")
+
+    if G.dt != K.dt and G.dt is not None and K.dt is not None:
+        if not (G.dt is True and K.dt != 0) and not (K.dt is True and G.dt != 0):
+            raise ValueError("Incompatible timebases: Plant and Controller have conflicting sampling times.")
 
     # ⚡ Bolt Optimization: Fast computation of complementary sensitivity function for StateSpace models.
     # Bypasses the significant overhead of ct.feedback and object creation
