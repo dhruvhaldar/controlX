@@ -105,3 +105,7 @@
 ## 2026-12-05 - Fast 2-norm calculation for matrix vectors
 **Learning:** Calling `np.linalg.norm(X, 2)` on a 1D vector or a 2D matrix representing a vector (e.g., shape `(N, 1)` or `(1, N)`) computes the full Singular Value Decomposition (SVD), an $O(N^3)$ operation. For vectors, the 2-norm is mathematically equivalent to the Frobenius norm (`np.linalg.norm(X)`), which computes in $O(N)$ time and is significantly faster.
 **Action:** When computing the 2-norm of a matrix representing a system gain, implement a fast path `if X.ndim < 2 or X.shape[0] == 1 or X.shape[1] == 1:` that calculates `np.linalg.norm(X)` instead of `np.linalg.norm(X, 2)` to bypass the slow SVD computation.
+
+## 2026-12-06 - Fast analytic SVD for 2x2 MIMO systems
+**Learning:** Calculating `np.linalg.svd(resp_T)` over batched frequency arrays for 2x2 MIMO systems uses an expensive $O(N^3)$ numerical decomposition, which is the primary bottleneck in frequency response analysis. For 2x2 matrices, the singular values can be computed analytically in $O(1)$ time using the trace of $M^*M$ and the determinant of $M$.
+**Action:** When computing singular values or H-infinity norms, implement a fast path `elif sys.ninputs == 2 and sys.noutputs == 2:` that calculates the 2x2 singular values directly via `T = np.sum(np.abs(resp_T)**2, axis=(1, 2))` and `det = resp_T[:,0,0]*resp_T[:,1,1] - resp_T[:,0,1]*resp_T[:,1,0]`.

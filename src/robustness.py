@@ -248,6 +248,14 @@ def calculate_hinf_norm(sys, omega=None):
 
             if sys.ninputs == 1 or sys.noutputs == 1:
                 max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
+            elif sys.ninputs == 2 and sys.noutputs == 2:
+                # ⚡ Bolt Optimization: Fast analytic maximum singular value for 2x2 MIMO systems
+                T = np.sum(np.abs(resp_T)**2, axis=(1, 2))
+                det = resp_T[:, 0, 0] * resp_T[:, 1, 1] - resp_T[:, 0, 1] * resp_T[:, 1, 0]
+                D = np.abs(det)**2
+                discriminant = np.maximum(T**2 - 4*D, 0)
+                sqrt_disc = np.sqrt(discriminant)
+                max_sv = np.max(np.sqrt((T + sqrt_disc) / 2))
             else:
                 svs = np.linalg.svd(resp_T, compute_uv=False)
                 max_sv = np.max(svs)
@@ -261,6 +269,13 @@ def calculate_hinf_norm(sys, omega=None):
                 resp_T = np.transpose(resp, (2, 0, 1))
                 if sys.ninputs == 1 or sys.noutputs == 1:
                     max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
+                elif sys.ninputs == 2 and sys.noutputs == 2:
+                    T = np.sum(np.abs(resp_T)**2, axis=(1, 2))
+                    det = resp_T[:, 0, 0] * resp_T[:, 1, 1] - resp_T[:, 0, 1] * resp_T[:, 1, 0]
+                    D = np.abs(det)**2
+                    discriminant = np.maximum(T**2 - 4*D, 0)
+                    sqrt_disc = np.sqrt(discriminant)
+                    max_sv = np.max(np.sqrt((T + sqrt_disc) / 2))
                 else:
                     svs = np.linalg.svd(resp_T, compute_uv=False)
                     max_sv = np.max(svs)
@@ -276,6 +291,13 @@ def calculate_hinf_norm(sys, omega=None):
             resp_T = np.transpose(resp, (2, 0, 1))
             if sys.ninputs == 1 or sys.noutputs == 1:
                 max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
+            elif sys.ninputs == 2 and sys.noutputs == 2:
+                T = np.sum(np.abs(resp_T)**2, axis=(1, 2))
+                det = resp_T[:, 0, 0] * resp_T[:, 1, 1] - resp_T[:, 0, 1] * resp_T[:, 1, 0]
+                D = np.abs(det)**2
+                discriminant = np.maximum(T**2 - 4*D, 0)
+                sqrt_disc = np.sqrt(discriminant)
+                max_sv = np.max(np.sqrt((T + sqrt_disc) / 2))
             else:
                 svs = np.linalg.svd(resp_T, compute_uv=False)
                 max_sv = np.max(svs)
