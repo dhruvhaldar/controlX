@@ -135,6 +135,16 @@ def calculate_singular_values(sys, omega=0):
 
             if sys.ninputs == 1 or sys.noutputs == 1:
                 S = np.linalg.norm(resp_T, axis=(1, 2)).reshape(-1, 1)
+            elif sys.ninputs == 2 and sys.noutputs == 2:
+                # ⚡ Bolt Optimization: Fast analytic SVD for 2x2 MIMO systems
+                T = np.sum(np.abs(resp_T)**2, axis=(1, 2))
+                det = resp_T[:, 0, 0] * resp_T[:, 1, 1] - resp_T[:, 0, 1] * resp_T[:, 1, 0]
+                D = np.abs(det)**2
+                discriminant = np.maximum(T**2 - 4*D, 0)
+                sqrt_disc = np.sqrt(discriminant)
+                sv1 = np.sqrt((T + sqrt_disc) / 2)
+                sv2 = np.sqrt((T - sqrt_disc) / 2)
+                S = np.column_stack((sv1, sv2))
             else:
                 S = np.linalg.svd(resp_T, compute_uv=False)
         except np.linalg.LinAlgError:
@@ -148,6 +158,15 @@ def calculate_singular_values(sys, omega=0):
                 resp_T = np.transpose(resp, (2, 0, 1))
                 if sys.ninputs == 1 or sys.noutputs == 1:
                     S = np.linalg.norm(resp_T, axis=(1, 2)).reshape(-1, 1)
+                elif sys.ninputs == 2 and sys.noutputs == 2:
+                    T = np.sum(np.abs(resp_T)**2, axis=(1, 2))
+                    det = resp_T[:, 0, 0] * resp_T[:, 1, 1] - resp_T[:, 0, 1] * resp_T[:, 1, 0]
+                    D = np.abs(det)**2
+                    discriminant = np.maximum(T**2 - 4*D, 0)
+                    sqrt_disc = np.sqrt(discriminant)
+                    sv1 = np.sqrt((T + sqrt_disc) / 2)
+                    sv2 = np.sqrt((T - sqrt_disc) / 2)
+                    S = np.column_stack((sv1, sv2))
                 else:
                     S = np.linalg.svd(resp_T, compute_uv=False)
     else:
@@ -164,6 +183,15 @@ def calculate_singular_values(sys, omega=0):
             resp_T = np.transpose(resp, (2, 0, 1))
             if sys.ninputs == 1 or sys.noutputs == 1:
                 S = np.linalg.norm(resp_T, axis=(1, 2)).reshape(-1, 1)
+            elif sys.ninputs == 2 and sys.noutputs == 2:
+                T = np.sum(np.abs(resp_T)**2, axis=(1, 2))
+                det = resp_T[:, 0, 0] * resp_T[:, 1, 1] - resp_T[:, 0, 1] * resp_T[:, 1, 0]
+                D = np.abs(det)**2
+                discriminant = np.maximum(T**2 - 4*D, 0)
+                sqrt_disc = np.sqrt(discriminant)
+                sv1 = np.sqrt((T + sqrt_disc) / 2)
+                sv2 = np.sqrt((T - sqrt_disc) / 2)
+                S = np.column_stack((sv1, sv2))
             else:
                 S = np.linalg.svd(resp_T, compute_uv=False)
 
