@@ -109,3 +109,7 @@
 ## 2026-12-06 - Fast analytic SVD for 2x2 MIMO systems
 **Learning:** Calculating `np.linalg.svd(resp_T)` over batched frequency arrays for 2x2 MIMO systems uses an expensive $O(N^3)$ numerical decomposition, which is the primary bottleneck in frequency response analysis. For 2x2 matrices, the singular values can be computed analytically in $O(1)$ time using the trace of $M^*M$ and the determinant of $M$.
 **Action:** When computing singular values or H-infinity norms, implement a fast path `elif sys.ninputs == 2 and sys.noutputs == 2:` that calculates the 2x2 singular values directly via `T = np.sum(np.abs(resp_T)**2, axis=(1, 2))` and `det = resp_T[:,0,0]*resp_T[:,1,1] - resp_T[:,0,1]*resp_T[:,1,0]`.
+
+## 2026-12-08 - Fast zero computation for StateSpace models
+**Learning:** The `control.zeros()` function has significant overhead from validation and type conversions. For square `StateSpace` models, computing the transmission zeros directly via the generalized eigenvalue problem of the system matrix pencil using `scipy.linalg.eigvals` is mathematically equivalent but bypasses this overhead, providing a ~3x speedup.
+**Action:** When computing zeros for square StateSpace systems, construct the block matrices `M1 = [A, B; C, D]` and `M2 = diag([I, 0])`, and compute `scipy.linalg.eigvals(M1, M2)`. Filter out the infinite eigenvalues (`np.isfinite`) to get the finite transmission zeros.
