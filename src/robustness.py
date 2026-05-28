@@ -87,7 +87,10 @@ def sensitivity_function(G, K):
 
     n_outputs = G.noutputs
     I = ct.ss([], [], [], np.eye(n_outputs))
-    S = ct.feedback(I, L)
+    try:
+        S = ct.feedback(I, L)
+    except Exception:
+        raise ValueError("Algebraic loop detected: loop transfer matrix is singular or results in an invalid system.") from None
     return S
 
 def complementary_sensitivity_function(G, K):
@@ -158,7 +161,10 @@ def complementary_sensitivity_function(G, K):
     # Using feedback(L, I) or feedback(L, 1) if SISO
     n_inputs = L.ninputs
     I = ct.ss([], [], [], np.eye(n_inputs))
-    T = ct.feedback(L, I)
+    try:
+        T = ct.feedback(L, I)
+    except Exception:
+        raise ValueError("Algebraic loop detected: loop transfer matrix is singular or results in an invalid system.") from None
     return T
 
 def calculate_hinf_norm(sys, omega=None):
