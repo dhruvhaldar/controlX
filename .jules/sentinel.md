@@ -132,3 +132,7 @@
 **Vulnerability:** The `sensitivity_function` and `complementary_sensitivity_function` lacked input timebase (`dt`) validation before performing system multiplication `G * K`, allowing `ValueError` to leak from `python-control` when given systems with incompatible continuous and discrete timebases.
 **Learning:** In ControlX robustness operations, passing state space or transfer function systems with conflicting timebases directly into mathematical operations (like `G * K`) can cause unhandled framework exceptions that expose underlying implementation details.
 **Prevention:** Always validate that systems have compatible timebases (e.g., matching `dt`) at the API boundary, raising a secure, domain-specific `ValueError` before performing mathematical operations.
+## 2025-10-28 - Prevent Framework Exception Leakage in ct.feedback Operations
+**Vulnerability:** Unhandled exceptions from `ct.feedback` in `sensitivity_function` and `complementary_sensitivity_function` for `TransferFunction` models leak internal error details when an algebraic loop is encountered.
+**Learning:** In ControlX robustness operations, using `python-control` library functions like `ct.feedback` can raise internal exceptions (`ValueError` about zero denominator or singular matrices) which expose framework implementation details.
+**Prevention:** Wrap calls to `ct.feedback` in a `try...except Exception` block and raise a domain-specific `ValueError` (e.g., "Algebraic loop detected: System cannot be inverted.") to mask internal implementation details.
