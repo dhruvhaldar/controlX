@@ -267,7 +267,10 @@ def calculate_hinf_norm(sys, omega=None):
                 max_sv = np.max(svs)
         except np.linalg.LinAlgError:
             # Fallback for pole collision
-            resp = sys.frequency_response(omega_arr).complex
+            try:
+                resp = sys.frequency_response(omega_arr).complex
+            except Exception:
+                raise ValueError("Failed to evaluate system frequency response: System may be improper or invalid.") from None
 
             if resp.ndim == 1:
                 max_sv = np.max(np.abs(resp))
@@ -286,7 +289,10 @@ def calculate_hinf_norm(sys, omega=None):
                     svs = np.linalg.svd(resp_T, compute_uv=False)
                     max_sv = np.max(svs)
     else:
-        resp = sys.frequency_response(omega_arr).complex
+        try:
+            resp = sys.frequency_response(omega_arr).complex
+        except Exception:
+            raise ValueError("Failed to evaluate system frequency response: System may be improper or invalid.") from None
 
         if resp.ndim == 1:
             # SISO case: resp is 1D array of complex values

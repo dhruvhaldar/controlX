@@ -168,7 +168,10 @@ def calculate_singular_values(sys, omega=0):
                 S = np.linalg.svd(resp_T, compute_uv=False)
         except np.linalg.LinAlgError:
             # Fallback for pole collision
-            resp = sys.frequency_response(omega_arr).complex
+            try:
+                resp = sys.frequency_response(omega_arr).complex
+            except Exception:
+                raise ValueError("Failed to evaluate system frequency response: System may be improper or invalid.") from None
 
             if resp.ndim == 1:
                 S = np.abs(resp)
@@ -189,7 +192,10 @@ def calculate_singular_values(sys, omega=0):
                 else:
                     S = np.linalg.svd(resp_T, compute_uv=False)
     else:
-        resp = sys.frequency_response(omega_arr).complex
+        try:
+            resp = sys.frequency_response(omega_arr).complex
+        except Exception:
+            raise ValueError("Failed to evaluate system frequency response: System may be improper or invalid.") from None
 
         if resp.ndim == 1:
             # SISO case
@@ -305,4 +311,7 @@ def system_gain(sys, omega=0):
             if sys.ninputs == 1 and sys.noutputs == 1:
                 return res[0, 0]
             return res
-    return ct.evalfr(sys, omega_val * 1j)
+    try:
+        return ct.evalfr(sys, omega_val * 1j)
+    except Exception:
+        raise ValueError("Failed to evaluate system frequency response: System may be improper or invalid.") from None
