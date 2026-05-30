@@ -334,7 +334,13 @@ def small_gain_theorem_check(M, Delta, omega=None):
         norm_M = calculate_hinf_norm(M, omega)
     else:
         try:
-            M_arr = np.array(np.atleast_2d(M), dtype=float)
+            M_arr = np.asarray(np.atleast_2d(M))
+            # Security: Prevent silent data truncation. Explicitly check for complex inputs
+            # before casting to avoid dropping imaginary components and returning invalid safety margins.
+            if np.iscomplexobj(M_arr):
+                M_arr = M_arr.astype(complex)
+            else:
+                M_arr = M_arr.astype(float)
         except (ValueError, TypeError):
             raise ValueError("M must be a control system or a numeric matrix/scalar.")
         if M_arr.ndim > 2:
@@ -355,7 +361,13 @@ def small_gain_theorem_check(M, Delta, omega=None):
         norm_Delta = calculate_hinf_norm(Delta, omega)
     else:
         try:
-            Delta_arr = np.array(Delta, dtype=float)
+            Delta_arr = np.asarray(Delta)
+            # Security: Prevent silent data truncation. Explicitly check for complex inputs
+            # before casting to avoid dropping imaginary components and returning invalid safety margins.
+            if np.iscomplexobj(Delta_arr):
+                Delta_arr = Delta_arr.astype(complex)
+            else:
+                Delta_arr = Delta_arr.astype(float)
         except (ValueError, TypeError):
             raise ValueError("Delta must be a control system or a numeric matrix/scalar.")
         if Delta_arr.ndim > 2:
