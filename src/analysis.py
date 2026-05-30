@@ -237,7 +237,13 @@ def relative_gain_array(G):
         np.ndarray: The RGA matrix.
     """
     try:
-        G_arr = np.array(G, dtype=float)
+        G_arr = np.asarray(G)
+        # Security: Prevent silent data truncation. Explicitly check for complex inputs
+        # before casting to avoid dropping imaginary components and returning invalid safety margins.
+        if np.iscomplexobj(G_arr):
+            G_arr = G_arr.astype(complex)
+        else:
+            G_arr = G_arr.astype(float)
     except (ValueError, TypeError):
         raise ValueError("Gain matrix must be a numeric array.")
 
