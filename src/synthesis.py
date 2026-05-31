@@ -7,7 +7,11 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     Validate that a matrix is finite, square, and symmetric positive semi-definite.
     """
     try:
-        matrix = np.array(matrix, dtype=float)
+        matrix = np.asarray(matrix)
+        if np.iscomplexobj(matrix):
+            matrix = matrix.astype(complex)
+        else:
+            matrix = matrix.astype(float)
     except (ValueError, TypeError):
         raise ValueError(f"{name} must be a numeric array.")
 
@@ -142,7 +146,11 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
         G = sys.B
 
     try:
-        G = np.array(G, dtype=float)
+        G = np.asarray(G)
+        if np.iscomplexobj(G):
+            G = G.astype(complex)
+        else:
+            G = G.astype(float)
     except (ValueError, TypeError):
         raise ValueError("Matrix G must be a numeric array.")
 
