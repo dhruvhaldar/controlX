@@ -92,7 +92,10 @@ def design_lqr(sys, Q, R):
             except np.linalg.LinAlgError:
                 raise ValueError("Failed to compute LQR gain: Matrix is singular.")
 
-        E = np.linalg.eigvals(sys.A - sys.B @ K)
+        try:
+            E = np.linalg.eigvals(sys.A - sys.B @ K)
+        except Exception:
+            raise ValueError("Failed to compute eigenvalues: Matrix is invalid or did not converge.") from None
     else:
         try:
             S = scipy.linalg.solve_discrete_are(sys.A, sys.B, Q, R)
@@ -113,7 +116,10 @@ def design_lqr(sys, Q, R):
             except np.linalg.LinAlgError:
                 raise ValueError("Failed to compute LQR gain: Matrix is singular.")
 
-        E = np.linalg.eigvals(sys.A - sys.B @ K)
+        try:
+            E = np.linalg.eigvals(sys.A - sys.B @ K)
+        except Exception:
+            raise ValueError("Failed to compute eigenvalues: Matrix is invalid or did not converge.") from None
     return K, S, E
 
 def design_kalman_filter(sys, Qn, Rn, G=None):
@@ -191,7 +197,10 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
         except np.linalg.LinAlgError:
             raise ValueError("Failed to compute Kalman gain: Matrix is singular.")
 
-    E = np.linalg.eigvals(sys.A - L @ sys.C)
+    try:
+        E = np.linalg.eigvals(sys.A - L @ sys.C)
+    except Exception:
+        raise ValueError("Failed to compute eigenvalues: Matrix is invalid or did not converge.") from None
     return L, P, E
 
 def design_lqg(sys, Q, R, Qn, Rn, G=None):
