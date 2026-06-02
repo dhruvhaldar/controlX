@@ -190,7 +190,10 @@ def calculate_singular_values(sys, omega=0):
                     sv2 = np.sqrt((T - sqrt_disc) / 2)
                     S = np.column_stack((sv1, sv2))
                 else:
-                    S = np.linalg.svd(resp_T, compute_uv=False)
+                    try:
+                        S = np.linalg.svd(resp_T, compute_uv=False)
+                    except Exception:
+                        raise ValueError("Failed to calculate singular values: System resulted in invalid frequency response matrices.") from None
     else:
         try:
             resp = sys.frequency_response(omega_arr).complex
@@ -218,7 +221,10 @@ def calculate_singular_values(sys, omega=0):
                 sv2 = np.sqrt((T - sqrt_disc) / 2)
                 S = np.column_stack((sv1, sv2))
             else:
-                S = np.linalg.svd(resp_T, compute_uv=False)
+                try:
+                    S = np.linalg.svd(resp_T, compute_uv=False)
+                except Exception:
+                    raise ValueError("Failed to calculate singular values: System resulted in invalid frequency response matrices.") from None
 
     # If a scalar was passed, return just the array of SVs for that frequency
     if np.isscalar(omega) or np.array(omega).ndim == 0:
