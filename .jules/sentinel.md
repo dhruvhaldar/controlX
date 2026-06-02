@@ -152,3 +152,8 @@
 **Vulnerability:** The `design_lqr` and `design_kalman_filter` functions allowed raw `Exception` to propagate to the user when terminal eigenvalue calculations (`np.linalg.eigvals`) failed to converge on the resultant closed-loop or estimator matrices.
 **Learning:** In control synthesis operations, failing to handle exceptions from terminal numerical calculations exposes framework implementation details and generic error messages. This can be used to gather information about the internal workings of the library.
 **Prevention:** Always wrap terminal numerical calculations like `np.linalg.eigvals` in a `try...except` block catching numerical errors, and explicitly raise a `ValueError` with a clear, domain-specific explanation to mask internal details.
+
+## 2026-06-01 - Prevent Exception Leakage from Fallback SVD Computations
+**Vulnerability:** The `calculate_singular_values` and `calculate_hinf_norm` functions allowed raw framework-level exceptions (such as `np.linalg.LinAlgError` for non-convergent SVDs) to leak when fallback or secondary code paths were taken.
+**Learning:** Even when primary execution paths use exceptions for internal control flow (e.g., catching `LinAlgError` to trigger a fallback strategy), the terminal mathematical operations within those secondary fallback paths must still be secured to prevent leaking internal implementation details on complete failure.
+**Prevention:** Always wrap terminal numerical calculations like `np.linalg.svd` in fallback branches or secondary execution paths in a `try...except Exception` block and raise a secure, domain-specific `ValueError`.

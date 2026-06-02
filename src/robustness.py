@@ -286,7 +286,10 @@ def calculate_hinf_norm(sys, omega=None):
                     sqrt_disc = np.sqrt(discriminant)
                     max_sv = np.max(np.sqrt((T + sqrt_disc) / 2))
                 else:
-                    svs = np.linalg.svd(resp_T, compute_uv=False)
+                    try:
+                        svs = np.linalg.svd(resp_T, compute_uv=False)
+                    except Exception:
+                        raise ValueError("Failed to calculate singular values: System resulted in invalid frequency response matrices.") from None
                     max_sv = np.max(svs)
     else:
         try:
@@ -311,7 +314,10 @@ def calculate_hinf_norm(sys, omega=None):
                 sqrt_disc = np.sqrt(discriminant)
                 max_sv = np.max(np.sqrt((T + sqrt_disc) / 2))
             else:
-                svs = np.linalg.svd(resp_T, compute_uv=False)
+                try:
+                    svs = np.linalg.svd(resp_T, compute_uv=False)
+                except Exception:
+                    raise ValueError("Failed to calculate singular values: System resulted in invalid frequency response matrices.") from None
                 max_sv = np.max(svs)
 
     return float(max_sv)
