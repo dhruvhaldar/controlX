@@ -231,7 +231,9 @@ def calculate_hinf_norm(sys, omega=None):
                 CV = sys.C @ V
                 invVB = invV @ sys.B
                 s_minus_eig = s[:, np.newaxis] - eigvals
-                inv_s_minus_eig = 1.0 / s_minus_eig
+                # ⚡ Bolt Optimization: Compute reciprocal in-place to avoid allocating a new complex array
+                np.reciprocal(s_minus_eig, out=s_minus_eig)
+                inv_s_minus_eig = s_minus_eig
                 # ⚡ Bolt Optimization: Use matmul with reshaped flat arrays instead of batched matmul.
                 # Factoring R = CV[:, None, :] * invVB.T[None, :, :] and reshaping avoids the O(F * O * I * N)
                 # broadcasted matmul, replacing it with an O(F * N * (O*I)) matmul (inv_s_minus_eig @ R_flat.T).
@@ -241,7 +243,8 @@ def calculate_hinf_norm(sys, omega=None):
                 resp_flat = inv_s_minus_eig @ R_flat.T
                 resp_T = resp_flat.reshape(len(omega_arr), sys.noutputs, sys.ninputs)
                 if np.any(sys.D):
-                    resp_T = resp_T + sys.D
+                    # ⚡ Bolt Optimization: In-place addition to avoid allocating a large batched matrix
+                    resp_T += sys.D
             else:
                 sI_minus_A = np.empty((len(omega_arr), sys.nstates, sys.nstates), dtype=complex)
                 sI_minus_A[...] = -sys.A
@@ -250,7 +253,8 @@ def calculate_hinf_norm(sys, omega=None):
                 X = np.linalg.solve(sI_minus_A, B_b)
                 resp_T = sys.C @ X
                 if np.any(sys.D):
-                    resp_T = resp_T + sys.D
+                    # ⚡ Bolt Optimization: In-place addition to avoid allocating a large batched matrix
+                    resp_T += sys.D
 
             if sys.ninputs == 1 or sys.noutputs == 1:
                 max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))

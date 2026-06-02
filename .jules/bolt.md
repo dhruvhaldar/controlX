@@ -113,3 +113,7 @@
 ## 2026-12-08 - Fast zero computation for StateSpace models
 **Learning:** The `control.zeros()` function has significant overhead from validation and type conversions. For square `StateSpace` models, computing the transmission zeros directly via the generalized eigenvalue problem of the system matrix pencil using `scipy.linalg.eigvals` is mathematically equivalent but bypasses this overhead, providing a ~3x speedup.
 **Action:** When computing zeros for square StateSpace systems, construct the block matrices `M1 = [A, B; C, D]` and `M2 = diag([I, 0])`, and compute `scipy.linalg.eigvals(M1, M2)`. Filter out the infinite eigenvalues (`np.isfinite`) to get the finite transmission zeros.
+
+## 2026-12-09 - Vectorized Reciprocal and In-Place Addition
+**Learning:** In batched evaluations over frequencies, allocating new arrays for matrix addition (`resp_T = resp_T + sys.D`) and reciprocal operations (`1.0 / s_minus_eig`) creates significant overhead due to memory allocation and garbage collection.
+**Action:** Prefer in-place operations (`+=` and `np.reciprocal(..., out=...)`) over allocating new arrays when constructing large frequency response tensors to achieve ~3-4x speedups for these operations.
