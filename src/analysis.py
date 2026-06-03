@@ -149,8 +149,8 @@ def calculate_singular_values(sys, omega=0):
                 sI_minus_A = np.empty((len(omega_arr), sys.nstates, sys.nstates), dtype=complex)
                 sI_minus_A[...] = -sys.A
                 sI_minus_A[:, np.arange(sys.nstates), np.arange(sys.nstates)] += s[:, np.newaxis]
-                B_b = np.broadcast_to(sys.B, (len(omega_arr), sys.nstates, sys.ninputs))
-                X = np.linalg.solve(sI_minus_A, B_b)
+                # ⚡ Bolt Optimization: Use np.linalg.solve native broadcasting for sys.B instead of np.broadcast_to
+                X = np.linalg.solve(sI_minus_A, sys.B)
                 resp_T = sys.C @ X
                 if np.any(sys.D):
                     # ⚡ Bolt Optimization: In-place addition to avoid allocating a large batched matrix
