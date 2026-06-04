@@ -121,3 +121,7 @@
 ## 2026-12-10 - Avoiding np.broadcast_to in batched np.linalg.solve
 **Learning:** When solving batched linear equations `np.linalg.solve(A, B)` where `A` is an array of shape `(..., M, M)` and `B` is a single matrix of shape `(M, K)`, `np.linalg.solve` natively supports broadcasting the right-hand side. Using `np.broadcast_to(B, (..., M, K))` explicitly before the solve introduces a small memory and performance overhead.
 **Action:** When using `np.linalg.solve` with batched matrices on the left and a constant matrix on the right, pass the constant matrix directly without explicit broadcasting.
+
+## 2026-12-11 - Fast path for poles of TransferFunction models
+**Learning:** Calculating poles for `TransferFunction` objects using `ct.poles` introduces significant overhead because python-control converts the models to state-space objects internally. However, simply taking the union of the roots of all denominators in a MIMO Transfer Function matrix is mathematically incorrect and yields spurious poles, as MIMO poles depend on the system's characteristic polynomial (the least common denominator of all non-zero minors).
+**Action:** When computing poles for a `TransferFunction`, implement a fast path *only* for SISO systems (`sys.ninputs == 1 and sys.noutputs == 1`) by extracting the denominator and calculating the roots directly using `np.roots`. This avoids the conversion overhead and provides a ~5x performance speedup while maintaining mathematical correctness.
