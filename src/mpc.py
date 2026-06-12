@@ -35,14 +35,18 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     # np.linalg.cholesky is O(N^3/3), while np.linalg.eigvalsh is O(4N^3/3),
     # providing a significant speedup for large matrices.
     try:
-        # Add a small epsilon for numerical stability with semi-definite matrices
-        # ⚡ Bolt Optimization: Avoid dense identity matrices. Modifying the flat diagonal
-        # is faster than creating an identity matrix and adding the two full matrices.
-        eps_matrix = matrix.copy()
-        eps_matrix.flat[::matrix.shape[0]+1] += 1e-9
-        np.linalg.cholesky(eps_matrix)
+        # Try the fast path first: many matrices are strictly positive definite
+        np.linalg.cholesky(matrix)
     except np.linalg.LinAlgError:
-        raise ValueError(f"{name} must be positive semi-definite.")
+        try:
+            # Add a small epsilon for numerical stability with semi-definite matrices
+            # ⚡ Bolt Optimization: Avoid dense identity matrices. Modifying the flat diagonal
+            # is faster than creating an identity matrix and adding the two full matrices.
+            eps_matrix = matrix.copy()
+            eps_matrix.flat[::matrix.shape[0]+1] += 1e-9
+            np.linalg.cholesky(eps_matrix)
+        except np.linalg.LinAlgError:
+            raise ValueError(f"{name} must be positive semi-definite.")
     return matrix
 
 
