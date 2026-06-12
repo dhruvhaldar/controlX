@@ -129,3 +129,7 @@
 ## 2026-12-12 - Fast TransferFunction evaluation using inline Horner's method
 **Learning:** `ct.evalfr` introduces significant wrapper overhead when computing scalar frequency responses for `TransferFunction` objects. We can bypass this overhead and achieve nearly a 2x speedup by manually evaluating the numerator and denominator polynomials using an inline Horner's method implementation. Interestingly, `np.polyval` is actually slower than an inline Python `for` loop implementation of Horner's method for small polynomials typically found in control systems.
 **Action:** When evaluating scalar frequency responses for TransferFunction models, use an inline Horner's method loop (`num_val = num_val * s + c`) instead of `ct.evalfr` or `np.polyval`.
+
+## 2026-12-13 - Fast path for Cholesky decompositions of positive definite matrices
+**Learning:** When validating matrices or computing matrix square roots via Cholesky decomposition for numerical stability, blindly copying the matrix and adding a small epsilon to the diagonal to ensure it's positive definite introduces unnecessary $O(N^2)$ memory allocation and copying overhead. Many matrices are already strictly positive definite, so this fallback is only needed when `np.linalg.cholesky(matrix)` fails with `np.linalg.LinAlgError`.
+**Action:** Always wrap Cholesky decompositions in a try-except pattern: try `np.linalg.cholesky(matrix)` first. If it throws `np.linalg.LinAlgError`, fall back to copying the array and adding a small epsilon to its diagonal.
