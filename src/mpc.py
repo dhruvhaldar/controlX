@@ -197,17 +197,27 @@ class MPCController:
         # reduces problem compilation time significantly and improves solve time.
         # ⚡ Bolt Optimization: Replace slow scipy.linalg.sqrtm with fast np.linalg.cholesky.
         # ⚡ Bolt Optimization: Avoid dense identity matrices for adding diagonal epsilons.
-        Q_eps = self.Q.copy()
-        Q_eps.flat[::self.Q.shape[0]+1] += 1e-9
-        Q_sqrt = np.linalg.cholesky(Q_eps).T
+        # ⚡ Bolt Optimization: Fast path for Cholesky decomposition of strictly positive definite matrices.
+        try:
+            Q_sqrt = np.linalg.cholesky(self.Q).T
+        except np.linalg.LinAlgError:
+            Q_eps = self.Q.copy()
+            Q_eps.flat[::self.Q.shape[0]+1] += 1e-9
+            Q_sqrt = np.linalg.cholesky(Q_eps).T
 
-        R_eps = self.R.copy()
-        R_eps.flat[::self.R.shape[0]+1] += 1e-9
-        R_sqrt = np.linalg.cholesky(R_eps).T
+        try:
+            R_sqrt = np.linalg.cholesky(self.R).T
+        except np.linalg.LinAlgError:
+            R_eps = self.R.copy()
+            R_eps.flat[::self.R.shape[0]+1] += 1e-9
+            R_sqrt = np.linalg.cholesky(R_eps).T
 
-        P_eps = self.P.copy()
-        P_eps.flat[::self.P.shape[0]+1] += 1e-9
-        P_sqrt = np.linalg.cholesky(P_eps).T
+        try:
+            P_sqrt = np.linalg.cholesky(self.P).T
+        except np.linalg.LinAlgError:
+            P_eps = self.P.copy()
+            P_eps.flat[::self.P.shape[0]+1] += 1e-9
+            P_sqrt = np.linalg.cholesky(P_eps).T
 
         cost = (cp.sum_squares(Q_sqrt @ self._x[:, :-1]) +
                 cp.sum_squares(R_sqrt @ self._u) +
