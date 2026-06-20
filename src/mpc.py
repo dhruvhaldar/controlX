@@ -203,21 +203,30 @@ class MPCController:
         except np.linalg.LinAlgError:
             Q_eps = self.Q.copy()
             Q_eps.flat[::self.Q.shape[0]+1] += 1e-9
-            Q_sqrt = np.linalg.cholesky(Q_eps).T
+            try:
+                Q_sqrt = np.linalg.cholesky(Q_eps).T
+            except Exception:
+                raise ValueError("Matrix Q must be positive semi-definite.") from None
 
         try:
             R_sqrt = np.linalg.cholesky(self.R).T
         except np.linalg.LinAlgError:
             R_eps = self.R.copy()
             R_eps.flat[::self.R.shape[0]+1] += 1e-9
-            R_sqrt = np.linalg.cholesky(R_eps).T
+            try:
+                R_sqrt = np.linalg.cholesky(R_eps).T
+            except Exception:
+                raise ValueError("Matrix R must be positive semi-definite.") from None
 
         try:
             P_sqrt = np.linalg.cholesky(self.P).T
         except np.linalg.LinAlgError:
             P_eps = self.P.copy()
             P_eps.flat[::self.P.shape[0]+1] += 1e-9
-            P_sqrt = np.linalg.cholesky(P_eps).T
+            try:
+                P_sqrt = np.linalg.cholesky(P_eps).T
+            except Exception:
+                raise ValueError("Matrix P must be positive semi-definite.") from None
 
         cost = (cp.sum_squares(Q_sqrt @ self._x[:, :-1]) +
                 cp.sum_squares(R_sqrt @ self._u) +
