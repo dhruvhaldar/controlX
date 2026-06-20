@@ -178,7 +178,12 @@ def calculate_singular_values(sys, omega=0):
                 sv2 = np.sqrt((T - sqrt_disc) / 2)
                 S = np.column_stack((sv1, sv2))
             else:
-                S = np.linalg.svd(resp_T, compute_uv=False)
+                try:
+                    S = np.linalg.svd(resp_T, compute_uv=False)
+                except np.linalg.LinAlgError:
+                    raise
+                except Exception:
+                    raise ValueError("Failed to calculate singular values: System resulted in invalid matrices.") from None
         except np.linalg.LinAlgError:
             # Fallback for pole collision
             try:

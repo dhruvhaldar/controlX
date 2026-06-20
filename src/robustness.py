@@ -267,7 +267,12 @@ def calculate_hinf_norm(sys, omega=None):
                 sqrt_disc = np.sqrt(discriminant)
                 max_sv = np.max(np.sqrt((T + sqrt_disc) / 2))
             else:
-                svs = np.linalg.svd(resp_T, compute_uv=False)
+                try:
+                    svs = np.linalg.svd(resp_T, compute_uv=False)
+                except np.linalg.LinAlgError:
+                    raise
+                except Exception:
+                    raise ValueError("Failed to calculate singular values: System resulted in invalid matrices.") from None
                 max_sv = np.max(svs)
         except np.linalg.LinAlgError:
             # Fallback for pole collision
