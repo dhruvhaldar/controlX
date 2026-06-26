@@ -72,7 +72,7 @@ def sensitivity_function(G, K):
             try:
                 inv_I_plus_D = np.linalg.inv(I_plus_D)
             except np.linalg.LinAlgError:
-                raise ValueError("Algebraic loop detected: I + L.D is singular and cannot be inverted.")
+                raise ValueError("Algebraic loop detected: I + L.D is singular and cannot be inverted.") from None
 
             # ⚡ Bolt Optimization: Cache inv_I_plus_D @ L.C to avoid O(N^3) redundant multiplication
             inv_I_plus_D_C = inv_I_plus_D @ C_L
@@ -183,7 +183,7 @@ def complementary_sensitivity_function(G, K):
             try:
                 inv_I_plus_D = np.linalg.inv(I_plus_D)
             except np.linalg.LinAlgError:
-                raise ValueError("Algebraic loop detected: I + L.D is singular and cannot be inverted.")
+                raise ValueError("Algebraic loop detected: I + L.D is singular and cannot be inverted.") from None
 
             # ⚡ Bolt Optimization: Cache inv_I_plus_D @ L.C to avoid O(N^3) redundant multiplication
             inv_I_plus_D_C = inv_I_plus_D @ C_L
@@ -231,7 +231,7 @@ def calculate_hinf_norm(sys, omega=None):
     try:
         omega_arr = np.array(np.atleast_1d(omega), dtype=float)
     except (ValueError, TypeError):
-        raise ValueError("omega must be a numeric array or scalar.")
+        raise ValueError("omega must be a numeric array or scalar.") from None
 
     if not np.isfinite(omega_arr).all():
         raise ValueError("omega must contain only finite numbers.")
@@ -397,7 +397,7 @@ def small_gain_theorem_check(M, Delta, omega=None):
             else:
                 M_arr = M_arr.astype(float)
         except (ValueError, TypeError):
-            raise ValueError("M must be a control system or a numeric matrix/scalar.")
+            raise ValueError("M must be a control system or a numeric matrix/scalar.") from None
         if M_arr.ndim > 2:
             raise ValueError("M must be a 1D or 2D array.")
         if M_arr.ndim > 0 and (M_arr.shape[0] > 500 or (M_arr.ndim > 1 and M_arr.shape[1] > 500)):
@@ -424,7 +424,7 @@ def small_gain_theorem_check(M, Delta, omega=None):
             else:
                 Delta_arr = Delta_arr.astype(float)
         except (ValueError, TypeError):
-            raise ValueError("Delta must be a control system or a numeric matrix/scalar.")
+            raise ValueError("Delta must be a control system or a numeric matrix/scalar.") from None
         if Delta_arr.ndim > 2:
             raise ValueError("Delta must be a 1D or 2D array.")
         if Delta_arr.ndim > 0 and (Delta_arr.shape[0] > 500 or (Delta_arr.ndim > 1 and Delta_arr.shape[1] > 500)):

@@ -13,7 +13,7 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
         else:
             matrix = matrix.astype(float)
     except (ValueError, TypeError):
-        raise ValueError(f"{name} must be a numeric array.")
+        raise ValueError(f"{name} must be a numeric array.") from None
 
     matrix = np.atleast_2d(matrix)
     if matrix.ndim > 2:
@@ -42,7 +42,7 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
             eps_matrix.flat[::matrix.shape[0]+1] += 1e-9
             np.linalg.cholesky(eps_matrix)
         except np.linalg.LinAlgError:
-            raise ValueError(f"{name} must be positive semi-definite.")
+            raise ValueError(f"{name} must be positive semi-definite.") from None
     return matrix
 
 
@@ -81,7 +81,7 @@ def design_lqr(sys, Q, R):
         try:
             S = scipy.linalg.solve_continuous_are(sys.A, sys.B, Q, R)
         except (scipy.linalg.LinAlgError, np.linalg.LinAlgError, ValueError):
-            raise ValueError("Failed to solve Riccati equation: System may be uncontrollable or weights invalid.")
+            raise ValueError("Failed to solve Riccati equation: System may be uncontrollable or weights invalid.") from None
 
         Bt_S = sys.B.T @ S
 
@@ -94,7 +94,7 @@ def design_lqr(sys, Q, R):
             try:
                 K = np.linalg.solve(R, Bt_S)
             except np.linalg.LinAlgError:
-                raise ValueError("Failed to compute LQR gain: Matrix is singular.")
+                raise ValueError("Failed to compute LQR gain: Matrix is singular.") from None
 
         try:
             E = np.linalg.eigvals(sys.A - sys.B @ K)
@@ -104,7 +104,7 @@ def design_lqr(sys, Q, R):
         try:
             S = scipy.linalg.solve_discrete_are(sys.A, sys.B, Q, R)
         except (scipy.linalg.LinAlgError, np.linalg.LinAlgError, ValueError):
-            raise ValueError("Failed to solve Riccati equation: System may be uncontrollable or weights invalid.")
+            raise ValueError("Failed to solve Riccati equation: System may be uncontrollable or weights invalid.") from None
 
         Bt_S = sys.B.T @ S
         M = R + Bt_S @ sys.B
@@ -118,7 +118,7 @@ def design_lqr(sys, Q, R):
             try:
                 K = np.linalg.solve(M, Bt_S @ sys.A)
             except np.linalg.LinAlgError:
-                raise ValueError("Failed to compute LQR gain: Matrix is singular.")
+                raise ValueError("Failed to compute LQR gain: Matrix is singular.") from None
 
         try:
             E = np.linalg.eigvals(sys.A - sys.B @ K)
@@ -162,7 +162,7 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
         else:
             G = G.astype(float)
     except (ValueError, TypeError):
-        raise ValueError("Matrix G must be a numeric array.")
+        raise ValueError("Matrix G must be a numeric array.") from None
 
     G = np.atleast_2d(G)
     if G.ndim > 2:
@@ -185,7 +185,7 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
     try:
         P = scipy.linalg.solve_continuous_are(sys.A.T, sys.C.T, G @ Qn @ G.T, Rn)
     except (scipy.linalg.LinAlgError, np.linalg.LinAlgError, ValueError):
-        raise ValueError("Failed to solve Riccati equation: System may be unobservable or noise covariances invalid.")
+        raise ValueError("Failed to solve Riccati equation: System may be unobservable or noise covariances invalid.") from None
 
     # ⚡ Bolt Optimization: Rn is a symmetric covariance matrix, so Rn == Rn.T.
     # Omitting the explicit transpose avoids NumPy memory view creation and LAPACK layout checks.
@@ -199,7 +199,7 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
         try:
             L = np.linalg.solve(Rn, CP).T
         except np.linalg.LinAlgError:
-            raise ValueError("Failed to compute Kalman gain: Matrix is singular.")
+            raise ValueError("Failed to compute Kalman gain: Matrix is singular.") from None
 
     try:
         E = np.linalg.eigvals(sys.A - L @ sys.C)
