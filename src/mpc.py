@@ -17,7 +17,7 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
         else:
             matrix = matrix.astype(float)
     except (ValueError, TypeError):
-        raise ValueError(f"{name} must be a numeric array.")
+        raise ValueError(f"{name} must be a numeric array.") from None
 
     matrix = np.atleast_2d(matrix)
     if matrix.ndim > 2:
@@ -46,7 +46,7 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
             eps_matrix.flat[::matrix.shape[0]+1] += 1e-9
             np.linalg.cholesky(eps_matrix)
         except np.linalg.LinAlgError:
-            raise ValueError(f"{name} must be positive semi-definite.")
+            raise ValueError(f"{name} must be positive semi-definite.") from None
     return matrix
 
 
@@ -87,7 +87,7 @@ class MPCController:
         try:
             dt_float = float(dt)
         except (ValueError, TypeError):
-            raise ValueError("Sampling time dt must be a positive number.")
+            raise ValueError("Sampling time dt must be a positive number.") from None
 
         if not np.isfinite(dt_float):
             raise ValueError("Sampling time dt must be finite.")
@@ -116,7 +116,7 @@ class MPCController:
                     else:
                         val = val.astype(float)
                 except (ValueError, TypeError):
-                    raise ValueError(f"Constraint {key} must be numeric.")
+                    raise ValueError(f"Constraint {key} must be numeric.") from None
                 if not np.isfinite(val).all():
                     raise ValueError(f"Constraint {key} must contain only finite numbers.")
                 if val.ndim > 1 or (val.ndim == 1 and val.shape[0] != self.n_u and val.shape[0] != 1):
@@ -132,7 +132,7 @@ class MPCController:
                     else:
                         val = val.astype(float)
                 except (ValueError, TypeError):
-                    raise ValueError(f"Constraint {key} must be numeric.")
+                    raise ValueError(f"Constraint {key} must be numeric.") from None
                 if not np.isfinite(val).all():
                     raise ValueError(f"Constraint {key} must contain only finite numbers.")
                 if val.ndim > 1 or (val.ndim == 1 and val.shape[0] != self.n_x and val.shape[0] != 1):

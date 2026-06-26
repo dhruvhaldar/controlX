@@ -98,7 +98,7 @@ def calculate_singular_values(sys, omega=0):
     try:
         omega_arr = np.array(np.atleast_1d(omega), dtype=float)
     except (ValueError, TypeError):
-        raise ValueError("omega must be a numeric array or scalar.")
+        raise ValueError("omega must be a numeric array or scalar.") from None
 
     if not np.isfinite(omega_arr).all():
         raise ValueError("omega must contain only finite numbers.")
@@ -269,7 +269,7 @@ def relative_gain_array(G):
         else:
             G_arr = G_arr.astype(float)
     except (ValueError, TypeError):
-        raise ValueError("Gain matrix must be a numeric array.")
+        raise ValueError("Gain matrix must be a numeric array.") from None
 
     G_arr = np.atleast_2d(G_arr)
     if G_arr.ndim > 2:
@@ -293,7 +293,7 @@ def relative_gain_array(G):
     except np.linalg.LinAlgError:
         # Security: Fail securely by throwing a dedicated error instead of returning None.
         # Returning None silently leads to downstream TypeError crashes and logic failures.
-        raise ValueError("Cannot compute RGA: System gain matrix is singular.")
+        raise ValueError("Cannot compute RGA: System gain matrix is singular.") from None
 
 def system_gain(sys, omega=0):
     """
@@ -316,7 +316,7 @@ def system_gain(sys, omega=0):
     try:
         omega_val = float(omega)
     except (ValueError, TypeError):
-        raise ValueError("omega must be a numeric value.")
+        raise ValueError("omega must be a numeric value.") from None
 
     if not np.isfinite(omega_val):
         raise ValueError("omega must be finite.")
