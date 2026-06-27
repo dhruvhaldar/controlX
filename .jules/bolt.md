@@ -137,3 +137,7 @@
 ## 2026-12-13 - Fast path for Cholesky decompositions of positive definite matrices
 **Learning:** When validating matrices or computing matrix square roots via Cholesky decomposition for numerical stability, blindly copying the matrix and adding a small epsilon to the diagonal to ensure it's positive definite introduces unnecessary $O(N^2)$ memory allocation and copying overhead. Many matrices are already strictly positive definite, so this fallback is only needed when `np.linalg.cholesky(matrix)` fails with `np.linalg.LinAlgError`.
 **Action:** Always wrap Cholesky decompositions in a try-except pattern: try `np.linalg.cholesky(matrix)` first. If it throws `np.linalg.LinAlgError`, fall back to copying the array and adding a small epsilon to its diagonal.
+
+## 2026-12-14 - Real arithmetic fast path for steady-state system gain
+**Learning:** In ControlX, when calculating the system gain for a `StateSpace` model at steady state (`omega=0`), evaluating the direct matrix solve with a complex frequency parameter (`s = 0j`) introduces unnecessary complex arithmetic overhead in NumPy. Bypassing complex arithmetic entirely when `omega=0` and performing real arithmetic for both continuous (`s=0`) and discrete (`s=1`) systems provides a nearly 2x speedup.
+**Action:** When evaluating the system gain at `omega=0`, implement a fast path (`if omega_val == 0.0:`) that calculates the real matrix `sI_minus_A` (`-sys.A` or `np.eye(sys.nstates) - sys.A`) directly to bypass the slow complex arithmetic computation overhead.
