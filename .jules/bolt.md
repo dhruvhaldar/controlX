@@ -141,3 +141,7 @@
 ## 2026-12-14 - Real arithmetic fast path for steady-state system gain
 **Learning:** In ControlX, when calculating the system gain for a `StateSpace` model at steady state (`omega=0`), evaluating the direct matrix solve with a complex frequency parameter (`s = 0j`) introduces unnecessary complex arithmetic overhead in NumPy. Bypassing complex arithmetic entirely when `omega=0` and performing real arithmetic for both continuous (`s=0`) and discrete (`s=1`) systems provides a nearly 2x speedup.
 **Action:** When evaluating the system gain at `omega=0`, implement a fast path (`if omega_val == 0.0:`) that calculates the real matrix `sI_minus_A` (`-sys.A` or `np.eye(sys.nstates) - sys.A`) directly to bypass the slow complex arithmetic computation overhead.
+
+## 2026-12-15 - Fast identity solve with np.linalg.inv
+**Learning:** Calling `np.linalg.solve(G, np.eye(N))` to compute the full inverse or solve against an identity matrix is slower than directly calling `np.linalg.inv(G)`. NumPy's `inv` function is explicitly optimized for computing the full inverse (via LAPACK's getri) and performs significantly faster than solving the linear system for the identity matrix.
+**Action:** When computing the full inverse of a matrix or mathematically solving a system against the identity matrix, always use `np.linalg.inv` rather than `np.linalg.solve(..., np.eye(N))`.

@@ -286,9 +286,8 @@ def relative_gain_array(G):
 
     try:
         # ⚡ Bolt Optimization: Fast computation of (G^-1)^T.
-        # RGA = G .* (G^-1)^T = G .* (G^T)^-1. Solving G^T X = I gives X = (G^T)^-1.
-        # This bypasses the explicit matrix inversion and transpose, providing a measurable speedup.
-        RGA = G_arr * np.linalg.solve(G_arr.T, np.eye(G_arr.shape[0]))
+        # RGA = G .* (G^-1)^T. np.linalg.inv is faster than np.linalg.solve for computing the full inverse.
+        RGA = G_arr * np.linalg.inv(G_arr).T
         return RGA
     except np.linalg.LinAlgError:
         # Security: Fail securely by throwing a dedicated error instead of returning None.
@@ -366,7 +365,8 @@ def system_gain(sys, omega=0):
                 if sys.dt is None or sys.dt == 0:
                     sI_minus_A = -sys.A
                 else:
-                    sI_minus_A = np.eye(sys.nstates) - sys.A
+                    sI_minus_A = -sys.A
+                    sI_minus_A.flat[::sys.nstates + 1] += 1.0
 
                 res = sys.C @ np.linalg.solve(sI_minus_A, sys.B) + sys.D
                 if sys.ninputs == 1 and sys.noutputs == 1:
