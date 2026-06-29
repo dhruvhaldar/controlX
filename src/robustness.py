@@ -407,10 +407,13 @@ def small_gain_theorem_check(M, Delta, omega=None):
 
         # ⚡ Bolt Optimization: Fast singular value calculation for SIMO and MISO systems
         # Bypasses the expensive O(N^3) SVD computation when the matrix is a vector.
-        if M_arr.ndim < 2 or M_arr.shape[0] == 1 or M_arr.shape[1] == 1:
-            norm_M = np.linalg.norm(M_arr)
-        else:
-            norm_M = np.linalg.norm(M_arr, 2) # Assume matrix gain
+        try:
+            if M_arr.ndim < 2 or M_arr.shape[0] == 1 or M_arr.shape[1] == 1:
+                norm_M = np.linalg.norm(M_arr)
+            else:
+                norm_M = np.linalg.norm(M_arr, 2) # Assume matrix gain
+        except Exception:
+            raise ValueError("Failed to calculate norm: Matrix resulted in invalid values or SVD did not converge.") from None
 
     if isinstance(Delta, (ct.StateSpace, ct.TransferFunction)):
         norm_Delta = calculate_hinf_norm(Delta, omega)
