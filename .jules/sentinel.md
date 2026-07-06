@@ -161,3 +161,7 @@
 **Vulnerability:** Several functions in `src/mpc.py`, `src/synthesis.py`, `src/robustness.py`, and `src/analysis.py` caught framework exceptions like `np.linalg.LinAlgError`, `ValueError`, and `TypeError` but then raised custom `ValueError`s without the `from None` clause. This leaked the original underlying exception stack trace, which exposed internal framework details.
 **Learning:** Even when we catch and re-raise exceptions with our own custom `ValueError`s to fail securely, Python 3 will still attach the original exception traceback by default (exception chaining). This inadvertently defeats the purpose of wrapping exceptions, because the raw stack trace and exception type is still exposed to the user.
 **Prevention:** Always use the `from None` clause when raising a custom exception within an `except` block to explicitly suppress the exception context and prevent leaking underlying stack traces.
+## 2026-06-27 - Prevent DoS via unbounded TransferFunction polynomial degrees
+**Vulnerability:** Unbounded TransferFunction inputs.
+**Learning:** TransferFunction polynomials can be arbitrarily large.
+**Prevention:** Bound matrix dimensions.

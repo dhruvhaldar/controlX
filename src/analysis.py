@@ -18,6 +18,11 @@ def calculate_poles(sys):
     if isinstance(sys, ct.StateSpace):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
             raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(sys, ct.TransferFunction):
+        for i in range(sys.noutputs):
+            for j in range(sys.ninputs):
+                if len(sys.num[i][j]) > 500 or len(sys.den[i][j]) > 500:
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     try:
         if isinstance(sys, ct.StateSpace) and getattr(sys, 'E', None) is None:
@@ -51,6 +56,11 @@ def calculate_zeros(sys):
     if isinstance(sys, ct.StateSpace):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
             raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(sys, ct.TransferFunction):
+        for i in range(sys.noutputs):
+            for j in range(sys.ninputs):
+                if len(sys.num[i][j]) > 500 or len(sys.den[i][j]) > 500:
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     try:
         # ⚡ Bolt Optimization: Fast computation of zeros for StateSpace models.
@@ -94,6 +104,11 @@ def calculate_singular_values(sys, omega=0):
     if isinstance(sys, ct.StateSpace):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
             raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(sys, ct.TransferFunction):
+        for i in range(sys.noutputs):
+            for j in range(sys.ninputs):
+                if len(sys.num[i][j]) > 500 or len(sys.den[i][j]) > 500:
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     try:
         omega_arr = np.array(np.atleast_1d(omega), dtype=float)
@@ -313,6 +328,11 @@ def system_gain(sys, omega=0):
     if isinstance(sys, ct.StateSpace):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
             raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(sys, ct.TransferFunction):
+        for i in range(sys.noutputs):
+            for j in range(sys.ninputs):
+                if len(sys.num[i][j]) > 500 or len(sys.den[i][j]) > 500:
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     try:
         omega_val = float(omega)
