@@ -19,9 +19,19 @@ def sensitivity_function(G, K):
     if isinstance(G, ct.StateSpace):
         if G.nstates > 500 or G.ninputs > 500 or G.noutputs > 500:
             raise ValueError("Plant dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(G, ct.TransferFunction):
+        for i in range(G.noutputs):
+            for j in range(G.ninputs):
+                if len(G.num[i][j]) > 500 or len(G.den[i][j]) > 500:
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(K, ct.StateSpace):
         if K.nstates > 500 or K.ninputs > 500 or K.noutputs > 500:
             raise ValueError("Controller dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(K, ct.TransferFunction):
+        for i in range(K.noutputs):
+            for j in range(K.ninputs):
+                if len(K.num[i][j]) > 500 or len(K.den[i][j]) > 500:
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     if G.ninputs != K.noutputs:
         raise ValueError("Incompatible dimensions: Plant inputs must match Controller outputs.")
@@ -131,9 +141,19 @@ def complementary_sensitivity_function(G, K):
     if isinstance(G, ct.StateSpace):
         if G.nstates > 500 or G.ninputs > 500 or G.noutputs > 500:
             raise ValueError("Plant dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(G, ct.TransferFunction):
+        for i in range(G.noutputs):
+            for j in range(G.ninputs):
+                if len(G.num[i][j]) > 500 or len(G.den[i][j]) > 500:
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(K, ct.StateSpace):
         if K.nstates > 500 or K.ninputs > 500 or K.noutputs > 500:
             raise ValueError("Controller dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(K, ct.TransferFunction):
+        for i in range(K.noutputs):
+            for j in range(K.ninputs):
+                if len(K.num[i][j]) > 500 or len(K.den[i][j]) > 500:
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     if G.ninputs != K.noutputs:
         raise ValueError("Incompatible dimensions: Plant inputs must match Controller outputs.")
@@ -224,6 +244,11 @@ def calculate_hinf_norm(sys, omega=None):
     if isinstance(sys, ct.StateSpace):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
             raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+    if isinstance(sys, ct.TransferFunction):
+        for i in range(sys.noutputs):
+            for j in range(sys.ninputs):
+                if len(sys.num[i][j]) > 500 or len(sys.den[i][j]) > 500:
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     if omega is None:
         omega = np.logspace(-2, 2, 1000)

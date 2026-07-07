@@ -122,3 +122,19 @@ def test_incompatible_dimensions():
         robustness.sensitivity_function(G, K)
     with pytest.raises(ValueError, match="Incompatible dimensions: Plant inputs must match Controller outputs."):
         robustness.complementary_sensitivity_function(G, K)
+
+def test_tf_dos_degree_limit():
+    sys_large = ct.tf([1] * 505, [1] * 505)
+    sys_small = ct.tf([1], [1, 1])
+
+    with pytest.raises(ValueError, match="TransferFunction polynomial degree is too large"):
+        robustness.sensitivity_function(sys_large, sys_small)
+
+    with pytest.raises(ValueError, match="TransferFunction polynomial degree is too large"):
+        robustness.sensitivity_function(sys_small, sys_large)
+
+    with pytest.raises(ValueError, match="TransferFunction polynomial degree is too large"):
+        robustness.complementary_sensitivity_function(sys_large, sys_small)
+
+    with pytest.raises(ValueError, match="TransferFunction polynomial degree is too large"):
+        robustness.calculate_hinf_norm(sys_large)
