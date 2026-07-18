@@ -17,15 +17,15 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
 
     matrix = np.atleast_2d(matrix)
     if matrix.ndim > 2:
-        raise ValueError(f"{name} must be a 1D or 2D array.")
+        raise ValueError(f"{name} must be a 1D or 2D array.") from None
     if not np.isfinite(matrix).all():
-        raise ValueError(f"{name} must contain only finite numbers.")
+        raise ValueError(f"{name} must contain only finite numbers.") from None
     if matrix.shape[0] != matrix.shape[1]:
-        raise ValueError(f"{name} must be a square matrix.")
+        raise ValueError(f"{name} must be a square matrix.") from None
     if expected_shape is not None and matrix.shape != expected_shape:
-        raise ValueError(f"{name} must have shape {expected_shape}.")
+        raise ValueError(f"{name} must have shape {expected_shape}.") from None
     if not np.allclose(matrix, matrix.T):
-        raise ValueError(f"{name} must be symmetric.")
+        raise ValueError(f"{name} must be symmetric.") from None
 
     # ⚡ Bolt Optimization: Fast positive semi-definite check via Cholesky decomposition.
     # np.linalg.cholesky is O(N^3/3), while np.linalg.eigvalsh is O(4N^3/3),
@@ -69,7 +69,7 @@ def design_lqr(sys, Q, R):
 
     # Security: Input validation to prevent resource exhaustion (DoS) from O(N^3) Riccati solvers
     if sys.nstates > 500 or sys.ninputs > 500:
-        raise ValueError("System dimensions are too large (exceeds maximum allowed 500 states/inputs) and would cause resource exhaustion.")
+        raise ValueError("System dimensions are too large (exceeds maximum allowed 500 states/inputs) and would cause resource exhaustion.") from None
 
     # Security: Validate matrices to prevent silent data corruption later
     Q = _validate_matrix(Q, expected_shape=(sys.nstates, sys.nstates), name="Q")
@@ -150,7 +150,7 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
 
     # Security: Input validation to prevent resource exhaustion (DoS) from O(N^3) Riccati solvers
     if sys.nstates > 500 or sys.noutputs > 500:
-        raise ValueError("System dimensions are too large (exceeds maximum allowed 500 states/outputs) and would cause resource exhaustion.")
+        raise ValueError("System dimensions are too large (exceeds maximum allowed 500 states/outputs) and would cause resource exhaustion.") from None
 
     if G is None:
         G = sys.B
@@ -166,13 +166,13 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
 
     G = np.atleast_2d(G)
     if G.ndim > 2:
-        raise ValueError("Matrix G must be a 1D or 2D array.")
+        raise ValueError("Matrix G must be a 1D or 2D array.") from None
     if not np.isfinite(G).all():
-        raise ValueError("Matrix G must contain only finite numbers.")
+        raise ValueError("Matrix G must contain only finite numbers.") from None
     if G.shape[0] != sys.nstates:
-        raise ValueError(f"Matrix G must have {sys.nstates} rows.")
+        raise ValueError(f"Matrix G must have {sys.nstates} rows.") from None
     if G.shape[1] > 500:
-        raise ValueError("Noise input dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
+        raise ValueError("Noise input dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
 
     # Security: Validate matrices to prevent silent data corruption later
     Qn = _validate_matrix(Qn, expected_shape=(G.shape[1], G.shape[1]), name="Qn")
