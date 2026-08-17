@@ -109,12 +109,11 @@ class MPCController:
         # Security: Validate constraint inputs
         for key in ['umin', 'umax']:
             if key in self.constraints:
+                val = np.asarray(self.constraints[key])
+                if np.iscomplexobj(val):
+                    raise ValueError(f"Constraint {key} must be real-valued.")
                 try:
-                    val = np.asarray(self.constraints[key])
-                    if np.iscomplexobj(val):
-                        val = val.astype(complex)
-                    else:
-                        val = val.astype(float)
+                    val = val.astype(float)
                 except (ValueError, TypeError):
                     raise ValueError(f"Constraint {key} must be numeric.") from None
                 if not np.isfinite(val).all():
@@ -125,12 +124,11 @@ class MPCController:
 
         for key in ['xmin', 'xmax']:
             if key in self.constraints:
+                val = np.asarray(self.constraints[key])
+                if np.iscomplexobj(val):
+                    raise ValueError(f"Constraint {key} must be real-valued.")
                 try:
-                    val = np.asarray(self.constraints[key])
-                    if np.iscomplexobj(val):
-                        val = val.astype(complex)
-                    else:
-                        val = val.astype(float)
+                    val = val.astype(float)
                 except (ValueError, TypeError):
                     raise ValueError(f"Constraint {key} must be numeric.") from None
                 if not np.isfinite(val).all():
@@ -249,7 +247,8 @@ class MPCController:
         try:
             x0_arr = np.asarray(x0)
             if np.iscomplexobj(x0_arr):
-                x0_arr = x0_arr.astype(complex)
+                logger.error("MPC Error: Input state must be real-valued.")
+                return np.zeros(self.n_u), "invalid_input"
             else:
                 x0_arr = x0_arr.astype(float)
         except (ValueError, TypeError):
