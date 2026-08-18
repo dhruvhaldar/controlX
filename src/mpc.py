@@ -112,7 +112,7 @@ class MPCController:
                 try:
                     val = np.asarray(self.constraints[key])
                     if np.iscomplexobj(val):
-                        val = val.astype(complex)
+                        raise ValueError(f"Constraint {key} must be real-valued, not complex.") from None
                     else:
                         val = val.astype(float)
                 except (ValueError, TypeError):
@@ -128,7 +128,7 @@ class MPCController:
                 try:
                     val = np.asarray(self.constraints[key])
                     if np.iscomplexobj(val):
-                        val = val.astype(complex)
+                        raise ValueError(f"Constraint {key} must be real-valued, not complex.") from None
                     else:
                         val = val.astype(float)
                 except (ValueError, TypeError):
@@ -249,7 +249,7 @@ class MPCController:
         try:
             x0_arr = np.asarray(x0)
             if np.iscomplexobj(x0_arr):
-                x0_arr = x0_arr.astype(complex)
+                raise ValueError("MPC Error: Input state must be a valid real numeric array or sequence.") from None
             else:
                 x0_arr = x0_arr.astype(float)
         except (ValueError, TypeError):
