@@ -13,9 +13,8 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     try:
         matrix = np.asarray(matrix)
         if np.iscomplexobj(matrix):
-            matrix = matrix.astype(complex)
-        else:
-            matrix = matrix.astype(float)
+            raise ValueError(f"{name} must not be complex.")
+        matrix = matrix.astype(float)
     except (ValueError, TypeError):
         raise ValueError(f"{name} must be a numeric array.") from None
 
@@ -112,9 +111,8 @@ class MPCController:
                 try:
                     val = np.asarray(self.constraints[key])
                     if np.iscomplexobj(val):
-                        val = val.astype(complex)
-                    else:
-                        val = val.astype(float)
+                        raise ValueError(f"Constraint {key} must not be complex.")
+                    val = val.astype(float)
                 except (ValueError, TypeError):
                     raise ValueError(f"Constraint {key} must be numeric.") from None
                 if not np.isfinite(val).all():
@@ -128,9 +126,8 @@ class MPCController:
                 try:
                     val = np.asarray(self.constraints[key])
                     if np.iscomplexobj(val):
-                        val = val.astype(complex)
-                    else:
-                        val = val.astype(float)
+                        raise ValueError(f"Constraint {key} must not be complex.")
+                    val = val.astype(float)
                 except (ValueError, TypeError):
                     raise ValueError(f"Constraint {key} must be numeric.") from None
                 if not np.isfinite(val).all():
@@ -249,9 +246,9 @@ class MPCController:
         try:
             x0_arr = np.asarray(x0)
             if np.iscomplexobj(x0_arr):
-                x0_arr = x0_arr.astype(complex)
-            else:
-                x0_arr = x0_arr.astype(float)
+                logger.error("MPC Error: Input state must not be complex.")
+                return np.zeros(self.n_u), "invalid_input"
+            x0_arr = x0_arr.astype(float)
         except (ValueError, TypeError):
             logger.error("MPC Error: Input state must be a valid numeric array or sequence.")
             return np.zeros(self.n_u), "invalid_input"

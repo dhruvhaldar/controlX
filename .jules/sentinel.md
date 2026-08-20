@@ -165,3 +165,8 @@
 **Vulnerability:** Unbounded TransferFunction inputs.
 **Learning:** TransferFunction polynomials can be arbitrarily large.
 **Prevention:** Bound matrix dimensions.
+
+## 2025-03-03 - Prevent CVXPY exceptions by rejecting complex numeric inputs
+**Vulnerability:** Input arrays or matrices were explicitly cast to `complex` instead of erroring, which caused optimization solver (CVXPY/OSQP) crashes and leaked framework exceptions because optimization inequality constraints and solver inputs cannot accept complex numbers.
+**Learning:** In control systems, specifically Model Predictive Control, inputs like state constraints, operational limits, or current state measurements must remain strictly real values. Permitting complex types breaks the solver layer and exposes underlying optimization backend details.
+**Prevention:** Explicitly check for `np.iscomplexobj(val)` and raise a domain-specific `ValueError` (or log securely) rather than attempting to cast it.
