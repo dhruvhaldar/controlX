@@ -165,3 +165,8 @@
 **Vulnerability:** Unbounded TransferFunction inputs.
 **Learning:** TransferFunction polynomials can be arbitrarily large.
 **Prevention:** Bound matrix dimensions.
+## 2024-10-18 - Fix Framework Exception Leaks in MPC Validation
+
+**Vulnerability:** The MPCController input validation for matrices and constraints inadvertently caused solver framework-level exceptions to leak when complex numbers were provided.
+**Learning:** Checking types inside a `try...except (ValueError, TypeError)` block meant that explicit re-raises were caught and swallowed, leading to obscure numerical failures later inside `cvxpy`.
+**Prevention:** Always place explicit, domain-specific input validation logic (like `np.iscomplexobj`) OUTSIDE of generic `try...except ValueError` blocks so that specific, secure rejection messages propagate cleanly instead of crashing the internal logic.
