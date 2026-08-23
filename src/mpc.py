@@ -10,12 +10,13 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     """
     Validate that a matrix is finite, square, and symmetric positive semi-definite.
     """
+    # Security: Prevent silent data truncation or cvxpy exception leakage.
+    # Explicitly check for complex inputs before casting and fail early.
+    matrix = np.asarray(matrix)
+    if np.iscomplexobj(matrix):
+        raise ValueError(f"{name} cannot be complex.")
     try:
-        matrix = np.asarray(matrix)
-        if np.iscomplexobj(matrix):
-            matrix = matrix.astype(complex)
-        else:
-            matrix = matrix.astype(float)
+        matrix = matrix.astype(float)
     except (ValueError, TypeError):
         raise ValueError(f"{name} must be a numeric array.") from None
 
@@ -109,12 +110,12 @@ class MPCController:
         # Security: Validate constraint inputs
         for key in ['umin', 'umax']:
             if key in self.constraints:
+                val = np.asarray(self.constraints[key])
+                # Security: Explicitly reject complex limits to prevent cvxpy unhandled framework exceptions
+                if np.iscomplexobj(val):
+                    raise ValueError(f"Constraint {key} cannot be complex.")
                 try:
-                    val = np.asarray(self.constraints[key])
-                    if np.iscomplexobj(val):
-                        val = val.astype(complex)
-                    else:
-                        val = val.astype(float)
+                    val = val.astype(float)
                 except (ValueError, TypeError):
                     raise ValueError(f"Constraint {key} must be numeric.") from None
                 if not np.isfinite(val).all():
@@ -125,12 +126,12 @@ class MPCController:
 
         for key in ['xmin', 'xmax']:
             if key in self.constraints:
+                val = np.asarray(self.constraints[key])
+                # Security: Explicitly reject complex limits to prevent cvxpy unhandled framework exceptions
+                if np.iscomplexobj(val):
+                    raise ValueError(f"Constraint {key} cannot be complex.")
                 try:
-                    val = np.asarray(self.constraints[key])
-                    if np.iscomplexobj(val):
-                        val = val.astype(complex)
-                    else:
-                        val = val.astype(float)
+                    val = val.astype(float)
                 except (ValueError, TypeError):
                     raise ValueError(f"Constraint {key} must be numeric.") from None
                 if not np.isfinite(val).all():
@@ -246,12 +247,13 @@ class MPCController:
             status (str): Solver status.
         """
         # Security: Input validation to prevent solver crashes or exceptions
+        x0_arr = np.asarray(x0)
+        # Security: Prevent cvxpy exception leakage from non-real values by validating strictly
+        if np.iscomplexobj(x0_arr):
+            logger.error("MPC Error: Input state cannot be complex.")
+            return np.zeros(self.n_u), "invalid_input"
         try:
-            x0_arr = np.asarray(x0)
-            if np.iscomplexobj(x0_arr):
-                x0_arr = x0_arr.astype(complex)
-            else:
-                x0_arr = x0_arr.astype(float)
+            x0_arr = x0_arr.astype(float)
         except (ValueError, TypeError):
             logger.error("MPC Error: Input state must be a valid numeric array or sequence.")
             return np.zeros(self.n_u), "invalid_input"

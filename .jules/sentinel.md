@@ -165,3 +165,7 @@
 **Vulnerability:** Unbounded TransferFunction inputs.
 **Learning:** TransferFunction polynomials can be arbitrarily large.
 **Prevention:** Bound matrix dimensions.
+## 2024-05-24 - Do Not Attempt to Cast Complex Constraint Limits
+**Vulnerability:** MPC constraint limits (`umin`, `umax`, `xmin`, `xmax`, `x0`) allowed complex input and erroneously attempted to cast it to `float` after a try block or ignored it to pass into cvxpy, which causes cvxpy to throw an unhandled internal exception `ValueError: Inequality constraints cannot be complex.` that bubbles out and crashes the framework.
+**Learning:** CVXPY solvers cannot handle complex numbers in inequality constraints or objective functions (e.g., quadratic form requires Hermitian matrices). A silent conversion attempt can mask the issue, and an unhandled pass-through leaks stack traces.
+**Prevention:** Always explicitly check for complex inputs (using `np.iscomplexobj()`) and fail early by raising a domain-specific `ValueError` or logging an error *before* performing casts or sending inputs into third-party optimization libraries like `cvxpy`.
