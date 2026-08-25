@@ -165,3 +165,7 @@
 **Vulnerability:** Unbounded TransferFunction inputs.
 **Learning:** TransferFunction polynomials can be arbitrarily large.
 **Prevention:** Bound matrix dimensions.
+## 2026-06-28 - Prevent Framework Exception Leakage via Complex Number Validation in cvxpy
+**Vulnerability:** The MPC controller class `MPCController` in `src/mpc.py` allowed framework exceptions (`ValueError: Inequality constraints cannot be complex.` and `ValueError: Parameter value must be real.`) to leak from `cvxpy` when given complex numbers for constraints (`umin`, `umax`, `xmin`, `xmax`) or input states (`x0`).
+**Learning:** `cvxpy` inequality constraints and parameters cannot accept complex numbers. When validating numerical matrices or limits for optimization problems, forcing `dtype=complex` or trying to handle complex numbers by passing them directly to the solver will cause unhandled framework exceptions that expose underlying implementation details.
+**Prevention:** Always explicitly check for complex inputs using `np.iscomplexobj()` when setting constraints or parameters for `cvxpy` optimization problems, and raise a secure, domain-specific `ValueError` (or log an error) rather than attempting to cast them to `complex` or passing them directly to the solver.

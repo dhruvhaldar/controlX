@@ -112,10 +112,12 @@ class MPCController:
                 try:
                     val = np.asarray(self.constraints[key])
                     if np.iscomplexobj(val):
-                        val = val.astype(complex)
+                        raise ValueError(f"Constraint {key} cannot be complex.")
                     else:
                         val = val.astype(float)
-                except (ValueError, TypeError):
+                except (ValueError, TypeError) as e:
+                    if "cannot be complex" in str(e):
+                        raise ValueError(f"Constraint {key} cannot be complex.") from None
                     raise ValueError(f"Constraint {key} must be numeric.") from None
                 if not np.isfinite(val).all():
                     raise ValueError(f"Constraint {key} must contain only finite numbers.") from None
@@ -128,10 +130,12 @@ class MPCController:
                 try:
                     val = np.asarray(self.constraints[key])
                     if np.iscomplexobj(val):
-                        val = val.astype(complex)
+                        raise ValueError(f"Constraint {key} cannot be complex.")
                     else:
                         val = val.astype(float)
-                except (ValueError, TypeError):
+                except (ValueError, TypeError) as e:
+                    if "cannot be complex" in str(e):
+                        raise ValueError(f"Constraint {key} cannot be complex.") from None
                     raise ValueError(f"Constraint {key} must be numeric.") from None
                 if not np.isfinite(val).all():
                     raise ValueError(f"Constraint {key} must contain only finite numbers.") from None
@@ -249,7 +253,8 @@ class MPCController:
         try:
             x0_arr = np.asarray(x0)
             if np.iscomplexobj(x0_arr):
-                x0_arr = x0_arr.astype(complex)
+                logger.error("MPC Error: Input state cannot be complex.")
+                return np.zeros(self.n_u), "invalid_input"
             else:
                 x0_arr = x0_arr.astype(float)
         except (ValueError, TypeError):
