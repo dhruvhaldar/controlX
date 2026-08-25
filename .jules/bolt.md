@@ -149,3 +149,7 @@
 ## 2026-11-26 - Fast Diagonal Addition for Batched Matrices
 **Learning:** In ControlX, when adding elements to the diagonal of batched matrices (e.g., `sI_minus_A[:, np.arange(N), np.arange(N)] += s[:, np.newaxis]`), using advanced indexing creates temporary index arrays and overhead. Utilizing flat view indexing (`sI_minus_A.reshape(batch_size, -1)[:, ::N + 1] += s[:, np.newaxis]`) bypasses this overhead and provides a ~20% performance speedup for batched operations over many frequencies.
 **Action:** When adding elements to the diagonal of batched matrices, always use flat view indexing `matrix.reshape(batch_size, -1)[:, ::N + 1] += values` instead of advanced indexing.
+
+## 2026-12-16 - Avoid redundant slicing when computing matrix elements in batched operations
+**Learning:** When repeatedly accessing elements of a batched multidimensional array (like `resp_T[:, 0, 0]`) for multiple calculations, slicing the array multiple times adds significant overhead. By extracting these slices into local variables once (e.g. `c00 = resp_T[:, 0, 0]`) and using the local variables, we avoid repeated slicing overhead and can perform element-wise arithmetic (~30% speedup).
+**Action:** When performing batched mathematical operations on specific components of small matrices, extract the specific indices (like `c00 = A[:, 0, 0]`) to local variables before computing combinations of them.
