@@ -327,8 +327,11 @@ def calculate_hinf_norm(sys, omega=None):
                 max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
             elif sys.ninputs == 2 and sys.noutputs == 2:
                 # ⚡ Bolt Optimization: Fast analytic maximum singular value for 2x2 MIMO systems
-                T = np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))
-                det = resp_T[:, 0, 0] * resp_T[:, 1, 1] - resp_T[:, 0, 1] * resp_T[:, 1, 0]
+                c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
+                c10, c11 = resp_T[:, 1, 0], resp_T[:, 1, 1]
+                T = (c00.real**2 + c00.imag**2 + c01.real**2 + c01.imag**2 +
+                     c10.real**2 + c10.imag**2 + c11.real**2 + c11.imag**2)
+                det = c00 * c11 - c01 * c10
                 D = det.real**2 + det.imag**2
                 discriminant = np.maximum(T**2 - 4*D, 0)
                 sqrt_disc = np.sqrt(discriminant)
@@ -355,8 +358,11 @@ def calculate_hinf_norm(sys, omega=None):
                 if sys.ninputs == 1 or sys.noutputs == 1:
                     max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
                 elif sys.ninputs == 2 and sys.noutputs == 2:
-                    T = np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))
-                    det = resp_T[:, 0, 0] * resp_T[:, 1, 1] - resp_T[:, 0, 1] * resp_T[:, 1, 0]
+                    c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
+                    c10, c11 = resp_T[:, 1, 0], resp_T[:, 1, 1]
+                    T = (c00.real**2 + c00.imag**2 + c01.real**2 + c01.imag**2 +
+                         c10.real**2 + c10.imag**2 + c11.real**2 + c11.imag**2)
+                    det = c00 * c11 - c01 * c10
                     D = det.real**2 + det.imag**2
                     discriminant = np.maximum(T**2 - 4*D, 0)
                     sqrt_disc = np.sqrt(discriminant)
@@ -383,8 +389,11 @@ def calculate_hinf_norm(sys, omega=None):
             if sys.ninputs == 1 or sys.noutputs == 1:
                 max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
             elif sys.ninputs == 2 and sys.noutputs == 2:
-                T = np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))
-                det = resp_T[:, 0, 0] * resp_T[:, 1, 1] - resp_T[:, 0, 1] * resp_T[:, 1, 0]
+                c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
+                c10, c11 = resp_T[:, 1, 0], resp_T[:, 1, 1]
+                T = (c00.real**2 + c00.imag**2 + c01.real**2 + c01.imag**2 +
+                     c10.real**2 + c10.imag**2 + c11.real**2 + c11.imag**2)
+                det = c00 * c11 - c01 * c10
                 D = det.real**2 + det.imag**2
                 discriminant = np.maximum(T**2 - 4*D, 0)
                 sqrt_disc = np.sqrt(discriminant)
