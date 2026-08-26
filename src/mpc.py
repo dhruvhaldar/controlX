@@ -12,10 +12,14 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     """
     try:
         matrix = np.asarray(matrix)
-        if np.iscomplexobj(matrix):
-            matrix = matrix.astype(complex)
-        else:
-            matrix = matrix.astype(float)
+    except (ValueError, TypeError):
+        raise ValueError(f"{name} must be a numeric array.") from None
+
+    if np.iscomplexobj(matrix):
+        raise ValueError(f"{name} cannot be complex.")
+
+    try:
+        matrix = matrix.astype(float)
     except (ValueError, TypeError):
         raise ValueError(f"{name} must be a numeric array.") from None
 
@@ -111,14 +115,17 @@ class MPCController:
             if key in self.constraints:
                 try:
                     val = np.asarray(self.constraints[key])
-                    if np.iscomplexobj(val):
-                        raise ValueError(f"Constraint {key} cannot be complex.")
-                    else:
-                        val = val.astype(float)
-                except (ValueError, TypeError) as e:
-                    if "cannot be complex" in str(e):
-                        raise ValueError(f"Constraint {key} cannot be complex.") from None
+                except (ValueError, TypeError):
                     raise ValueError(f"Constraint {key} must be numeric.") from None
+
+                if np.iscomplexobj(val):
+                    raise ValueError(f"Constraint {key} cannot be complex.")
+
+                try:
+                    val = val.astype(float)
+                except (ValueError, TypeError):
+                    raise ValueError(f"Constraint {key} must be numeric.") from None
+
                 if not np.isfinite(val).all():
                     raise ValueError(f"Constraint {key} must contain only finite numbers.") from None
                 if val.ndim > 1 or (val.ndim == 1 and val.shape[0] != self.n_u and val.shape[0] != 1):
@@ -129,14 +136,17 @@ class MPCController:
             if key in self.constraints:
                 try:
                     val = np.asarray(self.constraints[key])
-                    if np.iscomplexobj(val):
-                        raise ValueError(f"Constraint {key} cannot be complex.")
-                    else:
-                        val = val.astype(float)
-                except (ValueError, TypeError) as e:
-                    if "cannot be complex" in str(e):
-                        raise ValueError(f"Constraint {key} cannot be complex.") from None
+                except (ValueError, TypeError):
                     raise ValueError(f"Constraint {key} must be numeric.") from None
+
+                if np.iscomplexobj(val):
+                    raise ValueError(f"Constraint {key} cannot be complex.")
+
+                try:
+                    val = val.astype(float)
+                except (ValueError, TypeError):
+                    raise ValueError(f"Constraint {key} must be numeric.") from None
+
                 if not np.isfinite(val).all():
                     raise ValueError(f"Constraint {key} must contain only finite numbers.") from None
                 if val.ndim > 1 or (val.ndim == 1 and val.shape[0] != self.n_x and val.shape[0] != 1):
@@ -252,11 +262,16 @@ class MPCController:
         # Security: Input validation to prevent solver crashes or exceptions
         try:
             x0_arr = np.asarray(x0)
-            if np.iscomplexobj(x0_arr):
-                logger.error("MPC Error: Input state cannot be complex.")
-                return np.zeros(self.n_u), "invalid_input"
-            else:
-                x0_arr = x0_arr.astype(float)
+        except (ValueError, TypeError):
+            logger.error("MPC Error: Input state must be a valid numeric array or sequence.")
+            return np.zeros(self.n_u), "invalid_input"
+
+        if np.iscomplexobj(x0_arr):
+            logger.error("MPC Error: Input state cannot be complex.")
+            return np.zeros(self.n_u), "invalid_input"
+
+        try:
+            x0_arr = x0_arr.astype(float)
         except (ValueError, TypeError):
             logger.error("MPC Error: Input state must be a valid numeric array or sequence.")
             return np.zeros(self.n_u), "invalid_input"
