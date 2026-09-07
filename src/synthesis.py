@@ -31,16 +31,26 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     # np.linalg.cholesky is O(N^3/3), while np.linalg.eigvalsh is O(4N^3/3),
     # providing a significant speedup for large matrices.
     try:
-        # Try the fast path first: many matrices are strictly positive definite
-        np.linalg.cholesky(matrix)
+        try:
+            # Try the fast path first: many matrices are strictly positive definite
+            np.linalg.cholesky(matrix)
+        except np.linalg.LinAlgError:
+            raise
+        except Exception:
+            raise ValueError(f"{name} must be positive semi-definite.") from None
     except np.linalg.LinAlgError:
         try:
-            # Add a small epsilon for numerical stability with semi-definite matrices
-            # ⚡ Bolt Optimization: Avoid dense identity matrices. Modifying the flat diagonal
-            # is faster than creating an identity matrix and adding the two full matrices.
-            eps_matrix = matrix.copy()
-            eps_matrix.flat[::matrix.shape[0]+1] += 1e-9
-            np.linalg.cholesky(eps_matrix)
+            try:
+                # Add a small epsilon for numerical stability with semi-definite matrices
+                # ⚡ Bolt Optimization: Avoid dense identity matrices. Modifying the flat diagonal
+                # is faster than creating an identity matrix and adding the two full matrices.
+                eps_matrix = matrix.copy()
+                eps_matrix.flat[::matrix.shape[0]+1] += 1e-9
+                np.linalg.cholesky(eps_matrix)
+            except np.linalg.LinAlgError:
+                raise
+            except Exception:
+                raise ValueError(f"{name} must be positive semi-definite.") from None
         except np.linalg.LinAlgError:
             raise ValueError(f"{name} must be positive semi-definite.") from None
     return matrix
@@ -88,11 +98,21 @@ def design_lqr(sys, Q, R):
         # ⚡ Bolt Optimization: R is symmetric positive definite (by definition of LQR cost).
         # Solving via Cholesky decomposition is mathematically identical but faster than standard LU solve.
         try:
-            c, low = scipy.linalg.cho_factor(R)
-            K = scipy.linalg.cho_solve((c, low), Bt_S)
+            try:
+                c, low = scipy.linalg.cho_factor(R)
+                K = scipy.linalg.cho_solve((c, low), Bt_S)
+            except scipy.linalg.LinAlgError:
+                raise
+            except Exception:
+                raise ValueError("Failed to compute LQR gain: Matrix is invalid.") from None
         except scipy.linalg.LinAlgError:
             try:
-                K = np.linalg.solve(R, Bt_S)
+                try:
+                    K = np.linalg.solve(R, Bt_S)
+                except np.linalg.LinAlgError:
+                    raise
+                except Exception:
+                    raise ValueError("Failed to compute LQR gain: Matrix is invalid.") from None
             except np.linalg.LinAlgError:
                 raise ValueError("Failed to compute LQR gain: Matrix is singular.") from None
 
@@ -112,11 +132,21 @@ def design_lqr(sys, Q, R):
         # ⚡ Bolt Optimization: (R + B^T S B) is symmetric positive definite.
         # Solving via Cholesky decomposition provides a ~25% speedup over np.linalg.solve.
         try:
-            c, low = scipy.linalg.cho_factor(M)
-            K = scipy.linalg.cho_solve((c, low), Bt_S @ sys.A)
+            try:
+                c, low = scipy.linalg.cho_factor(M)
+                K = scipy.linalg.cho_solve((c, low), Bt_S @ sys.A)
+            except scipy.linalg.LinAlgError:
+                raise
+            except Exception:
+                raise ValueError("Failed to compute LQR gain: Matrix is invalid.") from None
         except scipy.linalg.LinAlgError:
             try:
-                K = np.linalg.solve(M, Bt_S @ sys.A)
+                try:
+                    K = np.linalg.solve(M, Bt_S @ sys.A)
+                except np.linalg.LinAlgError:
+                    raise
+                except Exception:
+                    raise ValueError("Failed to compute LQR gain: Matrix is invalid.") from None
             except np.linalg.LinAlgError:
                 raise ValueError("Failed to compute LQR gain: Matrix is singular.") from None
 
@@ -193,11 +223,21 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
     # decomposition provides a ~25% speedup over the standard LU solver in np.linalg.solve.
     CP = sys.C @ P
     try:
-        c, low = scipy.linalg.cho_factor(Rn)
-        L = scipy.linalg.cho_solve((c, low), CP).T
+        try:
+            c, low = scipy.linalg.cho_factor(Rn)
+            L = scipy.linalg.cho_solve((c, low), CP).T
+        except scipy.linalg.LinAlgError:
+            raise
+        except Exception:
+            raise ValueError("Failed to compute Kalman gain: Matrix is invalid.") from None
     except scipy.linalg.LinAlgError:
         try:
-            L = np.linalg.solve(Rn, CP).T
+            try:
+                L = np.linalg.solve(Rn, CP).T
+            except np.linalg.LinAlgError:
+                raise
+            except Exception:
+                raise ValueError("Failed to compute Kalman gain: Matrix is invalid.") from None
         except np.linalg.LinAlgError:
             raise ValueError("Failed to compute Kalman gain: Matrix is singular.") from None
 

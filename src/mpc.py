@@ -39,16 +39,26 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
     # np.linalg.cholesky is O(N^3/3), while np.linalg.eigvalsh is O(4N^3/3),
     # providing a significant speedup for large matrices.
     try:
-        # Try the fast path first: many matrices are strictly positive definite
-        np.linalg.cholesky(matrix)
+        try:
+            # Try the fast path first: many matrices are strictly positive definite
+            np.linalg.cholesky(matrix)
+        except np.linalg.LinAlgError:
+            raise
+        except Exception:
+            raise ValueError(f"{name} must be positive semi-definite.") from None
     except np.linalg.LinAlgError:
         try:
-            # Add a small epsilon for numerical stability with semi-definite matrices
-            # ⚡ Bolt Optimization: Avoid dense identity matrices. Modifying the flat diagonal
-            # is faster than creating an identity matrix and adding the two full matrices.
-            eps_matrix = matrix.copy()
-            eps_matrix.flat[::matrix.shape[0]+1] += 1e-9
-            np.linalg.cholesky(eps_matrix)
+            try:
+                # Add a small epsilon for numerical stability with semi-definite matrices
+                # ⚡ Bolt Optimization: Avoid dense identity matrices. Modifying the flat diagonal
+                # is faster than creating an identity matrix and adding the two full matrices.
+                eps_matrix = matrix.copy()
+                eps_matrix.flat[::matrix.shape[0]+1] += 1e-9
+                np.linalg.cholesky(eps_matrix)
+            except np.linalg.LinAlgError:
+                raise
+            except Exception:
+                raise ValueError(f"{name} must be positive semi-definite.") from None
         except np.linalg.LinAlgError:
             raise ValueError(f"{name} must be positive semi-definite.") from None
     return matrix
@@ -213,33 +223,63 @@ class MPCController:
         # ⚡ Bolt Optimization: Avoid dense identity matrices for adding diagonal epsilons.
         # ⚡ Bolt Optimization: Fast path for Cholesky decomposition of strictly positive definite matrices.
         try:
-            Q_sqrt = np.linalg.cholesky(self.Q).T
+            try:
+                Q_sqrt = np.linalg.cholesky(self.Q).T
+            except np.linalg.LinAlgError:
+                raise
+            except Exception:
+                raise ValueError("Matrix Q must be positive semi-definite.") from None
         except np.linalg.LinAlgError:
             Q_eps = self.Q.copy()
             Q_eps.flat[::self.Q.shape[0]+1] += 1e-9
             try:
-                Q_sqrt = np.linalg.cholesky(Q_eps).T
-            except Exception:
+                try:
+                    Q_sqrt = np.linalg.cholesky(Q_eps).T
+                except np.linalg.LinAlgError:
+                    raise
+                except Exception:
+                    raise ValueError("Matrix Q must be positive semi-definite.") from None
+            except np.linalg.LinAlgError:
                 raise ValueError("Matrix Q must be positive semi-definite.") from None
 
         try:
-            R_sqrt = np.linalg.cholesky(self.R).T
+            try:
+                R_sqrt = np.linalg.cholesky(self.R).T
+            except np.linalg.LinAlgError:
+                raise
+            except Exception:
+                raise ValueError("Matrix R must be positive semi-definite.") from None
         except np.linalg.LinAlgError:
             R_eps = self.R.copy()
             R_eps.flat[::self.R.shape[0]+1] += 1e-9
             try:
-                R_sqrt = np.linalg.cholesky(R_eps).T
-            except Exception:
+                try:
+                    R_sqrt = np.linalg.cholesky(R_eps).T
+                except np.linalg.LinAlgError:
+                    raise
+                except Exception:
+                    raise ValueError("Matrix R must be positive semi-definite.") from None
+            except np.linalg.LinAlgError:
                 raise ValueError("Matrix R must be positive semi-definite.") from None
 
         try:
-            P_sqrt = np.linalg.cholesky(self.P).T
+            try:
+                P_sqrt = np.linalg.cholesky(self.P).T
+            except np.linalg.LinAlgError:
+                raise
+            except Exception:
+                raise ValueError("Matrix P must be positive semi-definite.") from None
         except np.linalg.LinAlgError:
             P_eps = self.P.copy()
             P_eps.flat[::self.P.shape[0]+1] += 1e-9
             try:
-                P_sqrt = np.linalg.cholesky(P_eps).T
-            except Exception:
+                try:
+                    P_sqrt = np.linalg.cholesky(P_eps).T
+                except np.linalg.LinAlgError:
+                    raise
+                except Exception:
+                    raise ValueError("Matrix P must be positive semi-definite.") from None
+            except np.linalg.LinAlgError:
                 raise ValueError("Matrix P must be positive semi-definite.") from None
 
         cost = (cp.sum_squares(Q_sqrt @ self._x[:, :-1]) +
