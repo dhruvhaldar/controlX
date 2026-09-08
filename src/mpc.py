@@ -16,7 +16,7 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
         raise ValueError(f"{name} must be a numeric array.") from None
 
     if np.iscomplexobj(matrix):
-        raise ValueError(f"{name} cannot be complex.")
+        raise ValueError(f"{name} cannot be complex.") from None
 
     try:
         matrix = matrix.astype(float)
@@ -129,7 +129,7 @@ class MPCController:
                     raise ValueError(f"Constraint {key} must be numeric.") from None
 
                 if np.iscomplexobj(val):
-                    raise ValueError(f"Constraint {key} cannot be complex.")
+                    raise ValueError(f"Constraint {key} cannot be complex.") from None
 
                 try:
                     val = val.astype(float)
@@ -150,7 +150,7 @@ class MPCController:
                     raise ValueError(f"Constraint {key} must be numeric.") from None
 
                 if np.iscomplexobj(val):
-                    raise ValueError(f"Constraint {key} cannot be complex.")
+                    raise ValueError(f"Constraint {key} cannot be complex.") from None
 
                 try:
                     val = val.astype(float)
