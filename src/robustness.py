@@ -352,7 +352,8 @@ def calculate_hinf_norm(sys, omega=None):
                 raise ValueError("Failed to evaluate system frequency response: System may be improper or invalid.") from None
 
             if resp.ndim == 1:
-                max_sv = np.max(np.abs(resp))
+                # ⚡ Bolt Optimization: Replace slow np.max(np.abs(resp)) with explicit max magnitude calculation to avoid redundant sqrt
+                max_sv = np.sqrt(np.max(resp.real**2 + resp.imag**2))
             else:
                 resp_T = np.transpose(resp, (2, 0, 1))
                 if sys.ninputs == 1 or sys.noutputs == 1:
@@ -381,7 +382,8 @@ def calculate_hinf_norm(sys, omega=None):
 
         if resp.ndim == 1:
             # SISO case: resp is 1D array of complex values
-            max_sv = np.max(np.abs(resp))
+            # ⚡ Bolt Optimization: Replace slow np.max(np.abs(resp)) with explicit max magnitude calculation to avoid redundant sqrt
+            max_sv = np.sqrt(np.max(resp.real**2 + resp.imag**2))
         else:
             # MIMO case: resp is (outputs, inputs, frequencies)
             # Transpose to (frequencies, outputs, inputs) for batched svd
@@ -470,7 +472,8 @@ def small_gain_theorem_check(M, Delta, omega=None):
             raise ValueError("Delta matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
         if not np.isfinite(Delta_arr).all():
             raise ValueError("Delta must contain only finite numbers.") from None
-        norm_Delta = np.max(np.abs(Delta_arr))
+        # ⚡ Bolt Optimization: Replace slow np.max(np.abs(Delta_arr)) with explicit max magnitude calculation to avoid redundant sqrt
+        norm_Delta = np.sqrt(np.max(Delta_arr.real**2 + Delta_arr.imag**2))
 
     product = norm_M * norm_Delta
     return product < 1.0, product
