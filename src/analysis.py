@@ -212,7 +212,8 @@ def calculate_singular_values(sys, omega=0):
                 raise ValueError("Failed to evaluate system frequency response: System may be improper or invalid.") from None
 
             if resp.ndim == 1:
-                S = np.abs(resp)
+                # ⚡ Bolt Optimization: Replace slow np.abs(resp) with explicit magnitude calculation
+                S = np.sqrt(resp.real**2 + resp.imag**2)
                 S = S.reshape(-1, 1)
             else:
                 resp_T = np.transpose(resp, (2, 0, 1))
@@ -243,7 +244,8 @@ def calculate_singular_values(sys, omega=0):
 
         if resp.ndim == 1:
             # SISO case
-            S = np.abs(resp)
+            # ⚡ Bolt Optimization: Replace slow np.abs(resp) with explicit magnitude calculation
+            S = np.sqrt(resp.real**2 + resp.imag**2)
             # Reshape to (frequencies, 1) to match MIMO behavior of returning (freqs, singular_values)
             S = S.reshape(-1, 1)
         else:
