@@ -207,7 +207,37 @@ def calculate_singular_values(sys, omega=0):
         except np.linalg.LinAlgError:
             # Fallback for pole collision
             try:
-                resp = sys.frequency_response(omega_arr).complex
+                # ⚡ Bolt Optimization: Fast frequency response evaluation via Horner's method for TransferFunctions.
+                # Bypasses the overhead of sys.frequency_response and np.polyval.
+                if isinstance(sys, ct.TransferFunction):
+                    s = 1j * omega_arr
+                    if sys.dt is not None and sys.dt != 0:
+                        if sys.dt is True:
+                            s = np.exp(s)
+                        else:
+                            s = np.exp(s * sys.dt)
+
+                    if sys.ninputs == 1 and sys.noutputs == 1:
+                        num_val = np.zeros_like(s, dtype=complex)
+                        for c in sys.num[0][0]:
+                            num_val = num_val * s + c
+                        den_val = np.zeros_like(s, dtype=complex)
+                        for c in sys.den[0][0]:
+                            den_val = den_val * s + c
+                        resp = num_val / den_val
+                    else:
+                        resp = np.empty((sys.noutputs, sys.ninputs, len(omega_arr)), dtype=complex)
+                        for i in range(sys.noutputs):
+                            for j in range(sys.ninputs):
+                                num_val = np.zeros_like(s, dtype=complex)
+                                for c in sys.num[i][j]:
+                                    num_val = num_val * s + c
+                                den_val = np.zeros_like(s, dtype=complex)
+                                for c in sys.den[i][j]:
+                                    den_val = den_val * s + c
+                                resp[i, j, :] = num_val / den_val
+                else:
+                    resp = sys.frequency_response(omega_arr).complex
             except Exception:
                 raise ValueError("Failed to evaluate system frequency response: System may be improper or invalid.") from None
 
@@ -238,7 +268,37 @@ def calculate_singular_values(sys, omega=0):
                         raise ValueError("Failed to calculate singular values: System resulted in invalid frequency response matrices.") from None
     else:
         try:
-            resp = sys.frequency_response(omega_arr).complex
+            # ⚡ Bolt Optimization: Fast frequency response evaluation via Horner's method for TransferFunctions.
+            # Bypasses the overhead of sys.frequency_response and np.polyval.
+            if isinstance(sys, ct.TransferFunction):
+                s = 1j * omega_arr
+                if sys.dt is not None and sys.dt != 0:
+                    if sys.dt is True:
+                        s = np.exp(s)
+                    else:
+                        s = np.exp(s * sys.dt)
+
+                if sys.ninputs == 1 and sys.noutputs == 1:
+                    num_val = np.zeros_like(s, dtype=complex)
+                    for c in sys.num[0][0]:
+                        num_val = num_val * s + c
+                    den_val = np.zeros_like(s, dtype=complex)
+                    for c in sys.den[0][0]:
+                        den_val = den_val * s + c
+                    resp = num_val / den_val
+                else:
+                    resp = np.empty((sys.noutputs, sys.ninputs, len(omega_arr)), dtype=complex)
+                    for i in range(sys.noutputs):
+                        for j in range(sys.ninputs):
+                            num_val = np.zeros_like(s, dtype=complex)
+                            for c in sys.num[i][j]:
+                                num_val = num_val * s + c
+                            den_val = np.zeros_like(s, dtype=complex)
+                            for c in sys.den[i][j]:
+                                den_val = den_val * s + c
+                            resp[i, j, :] = num_val / den_val
+            else:
+                resp = sys.frequency_response(omega_arr).complex
         except Exception:
             raise ValueError("Failed to evaluate system frequency response: System may be improper or invalid.") from None
 
