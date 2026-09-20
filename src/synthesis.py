@@ -95,26 +95,15 @@ def design_lqr(sys, Q, R):
 
         Bt_S = sys.B.T @ S
 
-        # ⚡ Bolt Optimization: R is symmetric positive definite (by definition of LQR cost).
-        # Solving via Cholesky decomposition is mathematically identical but faster than standard LU solve.
+        # ⚡ Bolt Optimization: Fast path for small matrices.
+        # For small matrices typical in control systems, np.linalg.solve is faster than
+        # scipy.linalg.cho_factor + cho_solve due to the overhead of SciPy wrappers.
         try:
-            try:
-                c, low = scipy.linalg.cho_factor(R)
-                K = scipy.linalg.cho_solve((c, low), Bt_S)
-            except scipy.linalg.LinAlgError:
-                raise
-            except Exception:
-                raise ValueError("Failed to compute LQR gain: Matrix is invalid.") from None
-        except scipy.linalg.LinAlgError:
-            try:
-                try:
-                    K = np.linalg.solve(R, Bt_S)
-                except np.linalg.LinAlgError:
-                    raise
-                except Exception:
-                    raise ValueError("Failed to compute LQR gain: Matrix is invalid.") from None
-            except np.linalg.LinAlgError:
-                raise ValueError("Failed to compute LQR gain: Matrix is singular.") from None
+            K = np.linalg.solve(R, Bt_S)
+        except np.linalg.LinAlgError:
+            raise ValueError("Failed to compute LQR gain: Matrix is singular.") from None
+        except Exception:
+            raise ValueError("Failed to compute LQR gain: Matrix is invalid.") from None
 
         try:
             E = np.linalg.eigvals(sys.A - sys.B @ K)
@@ -129,26 +118,15 @@ def design_lqr(sys, Q, R):
         Bt_S = sys.B.T @ S
         M = R + Bt_S @ sys.B
 
-        # ⚡ Bolt Optimization: (R + B^T S B) is symmetric positive definite.
-        # Solving via Cholesky decomposition provides a ~25% speedup over np.linalg.solve.
+        # ⚡ Bolt Optimization: Fast path for small matrices.
+        # For small matrices typical in control systems, np.linalg.solve is faster than
+        # scipy.linalg.cho_factor + cho_solve due to the overhead of SciPy wrappers.
         try:
-            try:
-                c, low = scipy.linalg.cho_factor(M)
-                K = scipy.linalg.cho_solve((c, low), Bt_S @ sys.A)
-            except scipy.linalg.LinAlgError:
-                raise
-            except Exception:
-                raise ValueError("Failed to compute LQR gain: Matrix is invalid.") from None
-        except scipy.linalg.LinAlgError:
-            try:
-                try:
-                    K = np.linalg.solve(M, Bt_S @ sys.A)
-                except np.linalg.LinAlgError:
-                    raise
-                except Exception:
-                    raise ValueError("Failed to compute LQR gain: Matrix is invalid.") from None
-            except np.linalg.LinAlgError:
-                raise ValueError("Failed to compute LQR gain: Matrix is singular.") from None
+            K = np.linalg.solve(M, Bt_S @ sys.A)
+        except np.linalg.LinAlgError:
+            raise ValueError("Failed to compute LQR gain: Matrix is singular.") from None
+        except Exception:
+            raise ValueError("Failed to compute LQR gain: Matrix is invalid.") from None
 
         try:
             E = np.linalg.eigvals(sys.A - sys.B @ K)
@@ -219,27 +197,16 @@ def design_kalman_filter(sys, Qn, Rn, G=None):
 
     # ⚡ Bolt Optimization: Rn is a symmetric covariance matrix, so Rn == Rn.T.
     # Omitting the explicit transpose avoids NumPy memory view creation and LAPACK layout checks.
-    # ⚡ Bolt Optimization: Since Rn is symmetric positive definite, solving via Cholesky
-    # decomposition provides a ~25% speedup over the standard LU solver in np.linalg.solve.
+    # ⚡ Bolt Optimization: Fast path for small matrices.
+    # For small matrices typical in control systems, np.linalg.solve is faster than
+    # scipy.linalg.cho_factor + cho_solve due to the overhead of SciPy wrappers.
     CP = sys.C @ P
     try:
-        try:
-            c, low = scipy.linalg.cho_factor(Rn)
-            L = scipy.linalg.cho_solve((c, low), CP).T
-        except scipy.linalg.LinAlgError:
-            raise
-        except Exception:
-            raise ValueError("Failed to compute Kalman gain: Matrix is invalid.") from None
-    except scipy.linalg.LinAlgError:
-        try:
-            try:
-                L = np.linalg.solve(Rn, CP).T
-            except np.linalg.LinAlgError:
-                raise
-            except Exception:
-                raise ValueError("Failed to compute Kalman gain: Matrix is invalid.") from None
-        except np.linalg.LinAlgError:
-            raise ValueError("Failed to compute Kalman gain: Matrix is singular.") from None
+        L = np.linalg.solve(Rn, CP).T
+    except np.linalg.LinAlgError:
+        raise ValueError("Failed to compute Kalman gain: Matrix is singular.") from None
+    except Exception:
+        raise ValueError("Failed to compute Kalman gain: Matrix is invalid.") from None
 
     try:
         E = np.linalg.eigvals(sys.A - L @ sys.C)
