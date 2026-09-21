@@ -17,12 +17,12 @@ def calculate_poles(sys):
 
     if isinstance(sys, ct.StateSpace):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
-            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(sys, ct.TransferFunction):
         for i in range(sys.noutputs):
             for j in range(sys.ninputs):
                 if len(sys.num[i][j]) > 500 or len(sys.den[i][j]) > 500:
-                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     try:
         if isinstance(sys, ct.StateSpace) and getattr(sys, 'E', None) is None:
@@ -55,12 +55,12 @@ def calculate_zeros(sys):
 
     if isinstance(sys, ct.StateSpace):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
-            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(sys, ct.TransferFunction):
         for i in range(sys.noutputs):
             for j in range(sys.ninputs):
                 if len(sys.num[i][j]) > 500 or len(sys.den[i][j]) > 500:
-                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     try:
         # ⚡ Bolt Optimization: Fast computation of zeros for StateSpace models.
@@ -103,12 +103,12 @@ def calculate_singular_values(sys, omega=0):
 
     if isinstance(sys, ct.StateSpace):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
-            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(sys, ct.TransferFunction):
         for i in range(sys.noutputs):
             for j in range(sys.ninputs):
                 if len(sys.num[i][j]) > 500 or len(sys.den[i][j]) > 500:
-                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     try:
         omega_arr = np.array(np.atleast_1d(omega), dtype=float)
@@ -116,12 +116,12 @@ def calculate_singular_values(sys, omega=0):
         raise ValueError("omega must be a numeric array or scalar.") from None
 
     if not np.isfinite(omega_arr).all():
-        raise ValueError("omega must contain only finite numbers.") from None
+        raise ValueError("omega must contain only finite numbers.")
 
     if omega_arr.ndim > 1:
-        raise ValueError("omega must be a 1D array or scalar.") from None
+        raise ValueError("omega must be a 1D array or scalar.")
     if omega_arr.size > 10000:
-        raise ValueError("omega array is too large (exceeds maximum allowed 10000) and would cause resource exhaustion.") from None
+        raise ValueError("omega array is too large (exceeds maximum allowed 10000) and would cause resource exhaustion.")
 
     # ⚡ Bolt Optimization: Vectorize singular value calculation for multiple frequencies
     # Replaces slow individual evalfr calls with batched frequency_response and SVD.
@@ -350,27 +350,30 @@ def relative_gain_array(G):
     """
     try:
         G_arr = np.asarray(G)
-        # Security: Prevent silent data truncation. Explicitly check for complex inputs
-        # before casting to avoid dropping imaginary components and returning invalid safety margins.
-        if np.iscomplexobj(G_arr):
-            G_arr = G_arr.astype(complex)
-        else:
-            G_arr = G_arr.astype(float)
     except (ValueError, TypeError):
         raise ValueError("Gain matrix must be a numeric array.") from None
+    # Security: Prevent silent data truncation. Explicitly check for complex inputs
+    # before casting to avoid dropping imaginary components and returning invalid safety margins.
+    if np.iscomplexobj(G_arr):
+        G_arr = G_arr.astype(complex)
+    else:
+        try:
+            G_arr = G_arr.astype(float)
+        except (ValueError, TypeError):
+            raise ValueError("Gain matrix must be a numeric array.") from None
 
     G_arr = np.atleast_2d(G_arr)
     if G_arr.ndim > 2:
-        raise ValueError("Gain matrix must be a 1D or 2D array.") from None
+        raise ValueError("Gain matrix must be a 1D or 2D array.")
 
     if G_arr.shape[0] != G_arr.shape[1]:
-        raise ValueError("Gain matrix must be a square matrix.") from None
+        raise ValueError("Gain matrix must be a square matrix.")
 
     if G_arr.shape[0] > 500 or G_arr.shape[1] > 500:
-        raise ValueError("Gain matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+        raise ValueError("Gain matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     if not np.isfinite(G_arr).all():
-        raise ValueError("Gain matrix must contain only finite numbers.") from None
+        raise ValueError("Gain matrix must contain only finite numbers.")
 
     try:
         # ⚡ Bolt Optimization: Fast computation of (G^-1)^T.
@@ -398,12 +401,12 @@ def system_gain(sys, omega=0):
 
     if isinstance(sys, ct.StateSpace):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
-            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(sys, ct.TransferFunction):
         for i in range(sys.noutputs):
             for j in range(sys.ninputs):
                 if len(sys.num[i][j]) > 500 or len(sys.den[i][j]) > 500:
-                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     try:
         omega_val = float(omega)
@@ -411,7 +414,7 @@ def system_gain(sys, omega=0):
         raise ValueError("omega must be a numeric value.") from None
 
     if not np.isfinite(omega_val):
-        raise ValueError("omega must be finite.") from None
+        raise ValueError("omega must be finite.")
 
     # ⚡ Bolt Optimization: Fast computation of system gain for TransferFunction models.
     # Bypasses the significant overhead of ct.evalfr by manually evaluating the polynomials
