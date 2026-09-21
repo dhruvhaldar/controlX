@@ -18,34 +18,34 @@ def sensitivity_function(G, K):
 
     if isinstance(G, ct.StateSpace):
         if G.nstates > 500 or G.ninputs > 500 or G.noutputs > 500:
-            raise ValueError("Plant dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("Plant dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(G, ct.TransferFunction):
         for i in range(G.noutputs):
             for j in range(G.ninputs):
                 if len(G.num[i][j]) > 500 or len(G.den[i][j]) > 500:
-                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(K, ct.StateSpace):
         if K.nstates > 500 or K.ninputs > 500 or K.noutputs > 500:
-            raise ValueError("Controller dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("Controller dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(K, ct.TransferFunction):
         for i in range(K.noutputs):
             for j in range(K.ninputs):
                 if len(K.num[i][j]) > 500 or len(K.den[i][j]) > 500:
-                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     if G.ninputs != K.noutputs:
-        raise ValueError("Incompatible dimensions: Plant inputs must match Controller outputs.") from None
+        raise ValueError("Incompatible dimensions: Plant inputs must match Controller outputs.")
 
     if G.dt != K.dt and G.dt is not None and K.dt is not None:
         if not (G.dt is True and K.dt != 0) and not (K.dt is True and G.dt != 0):
-            raise ValueError("Incompatible timebases: Plant and Controller have conflicting sampling times.") from None
+            raise ValueError("Incompatible timebases: Plant and Controller have conflicting sampling times.")
 
     # ⚡ Bolt Optimization: Fast computation of sensitivity function for StateSpace models.
     # Bypasses the significant overhead of ct.feedback and object creation
     # by directly computing the resulting state space matrices.
     if isinstance(G, ct.StateSpace) and isinstance(K, ct.StateSpace):
         if G.noutputs != K.ninputs:
-            raise ValueError("Loop transfer matrix must be square.") from None
+            raise ValueError("Loop transfer matrix must be square.")
 
         # ⚡ Bolt Optimization: Manually construct L = G * K matrices to avoid python-control wrapper overhead.
         # This provides a ~2x speedup by avoiding intermediate StateSpace object creation.
@@ -95,7 +95,7 @@ def sensitivity_function(G, K):
 
     L = G * K
     if L.noutputs != L.ninputs:
-        raise ValueError("Loop transfer matrix must be square.") from None
+        raise ValueError("Loop transfer matrix must be square.")
     # Sensitivity Function S = (I + L)^-1
     # control.feedback returns L / (1+L) if sign=-1
     # To get (1+L)^-1, we can compute 1 - T
@@ -140,34 +140,34 @@ def complementary_sensitivity_function(G, K):
 
     if isinstance(G, ct.StateSpace):
         if G.nstates > 500 or G.ninputs > 500 or G.noutputs > 500:
-            raise ValueError("Plant dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("Plant dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(G, ct.TransferFunction):
         for i in range(G.noutputs):
             for j in range(G.ninputs):
                 if len(G.num[i][j]) > 500 or len(G.den[i][j]) > 500:
-                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(K, ct.StateSpace):
         if K.nstates > 500 or K.ninputs > 500 or K.noutputs > 500:
-            raise ValueError("Controller dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("Controller dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(K, ct.TransferFunction):
         for i in range(K.noutputs):
             for j in range(K.ninputs):
                 if len(K.num[i][j]) > 500 or len(K.den[i][j]) > 500:
-                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     if G.ninputs != K.noutputs:
-        raise ValueError("Incompatible dimensions: Plant inputs must match Controller outputs.") from None
+        raise ValueError("Incompatible dimensions: Plant inputs must match Controller outputs.")
 
     if G.dt != K.dt and G.dt is not None and K.dt is not None:
         if not (G.dt is True and K.dt != 0) and not (K.dt is True and G.dt != 0):
-            raise ValueError("Incompatible timebases: Plant and Controller have conflicting sampling times.") from None
+            raise ValueError("Incompatible timebases: Plant and Controller have conflicting sampling times.")
 
     # ⚡ Bolt Optimization: Fast computation of complementary sensitivity function for StateSpace models.
     # Bypasses the significant overhead of ct.feedback and object creation
     # by directly computing the resulting state space matrices.
     if isinstance(G, ct.StateSpace) and isinstance(K, ct.StateSpace):
         if G.noutputs != K.ninputs:
-            raise ValueError("Loop transfer matrix must be square.") from None
+            raise ValueError("Loop transfer matrix must be square.")
 
         # ⚡ Bolt Optimization: Manually construct L = G * K matrices to avoid python-control wrapper overhead.
         # This provides a ~2x speedup by avoiding intermediate StateSpace object creation.
@@ -216,7 +216,7 @@ def complementary_sensitivity_function(G, K):
 
     L = G * K
     if L.noutputs != L.ninputs:
-        raise ValueError("Loop transfer matrix must be square.") from None
+        raise ValueError("Loop transfer matrix must be square.")
     # T = L / (1 + L)
     # Using feedback(L, I) or feedback(L, 1) if SISO
     n_inputs = L.ninputs
@@ -243,12 +243,12 @@ def calculate_hinf_norm(sys, omega=None):
 
     if isinstance(sys, ct.StateSpace):
         if sys.nstates > 500 or sys.ninputs > 500 or sys.noutputs > 500:
-            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
     if isinstance(sys, ct.TransferFunction):
         for i in range(sys.noutputs):
             for j in range(sys.ninputs):
                 if len(sys.num[i][j]) > 500 or len(sys.den[i][j]) > 500:
-                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+                    raise ValueError("TransferFunction polynomial degree is too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
 
     if omega is None:
         omega = np.logspace(-2, 2, 1000)
@@ -259,12 +259,12 @@ def calculate_hinf_norm(sys, omega=None):
         raise ValueError("omega must be a numeric array or scalar.") from None
 
     if not np.isfinite(omega_arr).all():
-        raise ValueError("omega must contain only finite numbers.") from None
+        raise ValueError("omega must contain only finite numbers.")
 
     if omega_arr.ndim > 1:
-        raise ValueError("omega must be a 1D array or scalar.") from None
+        raise ValueError("omega must be a 1D array or scalar.")
     if omega_arr.size > 10000:
-        raise ValueError("omega array is too large (exceeds maximum allowed 10000) and would cause resource exhaustion.") from None
+        raise ValueError("omega array is too large (exceeds maximum allowed 10000) and would cause resource exhaustion.")
 
     # ⚡ Bolt Optimization: Replace slow python loop with vectorized batched SVD.
     # Calculates frequency response for all frequencies simultaneously.
@@ -488,20 +488,23 @@ def small_gain_theorem_check(M, Delta, omega=None):
     else:
         try:
             M_arr = np.asarray(np.atleast_2d(M))
-            # Security: Prevent silent data truncation. Explicitly check for complex inputs
-            # before casting to avoid dropping imaginary components and returning invalid safety margins.
-            if np.iscomplexobj(M_arr):
-                M_arr = M_arr.astype(complex)
-            else:
-                M_arr = M_arr.astype(float)
         except (ValueError, TypeError):
             raise ValueError("M must be a control system or a numeric matrix/scalar.") from None
+        # Security: Prevent silent data truncation. Explicitly check for complex inputs
+        # before casting to avoid dropping imaginary components and returning invalid safety margins.
+        if np.iscomplexobj(M_arr):
+            M_arr = M_arr.astype(complex)
+        else:
+            try:
+                M_arr = M_arr.astype(float)
+            except (ValueError, TypeError):
+                raise ValueError("M must be a control system or a numeric matrix/scalar.") from None
         if M_arr.ndim > 2:
-            raise ValueError("M must be a 1D or 2D array.") from None
+            raise ValueError("M must be a 1D or 2D array.")
         if M_arr.ndim > 0 and (M_arr.shape[0] > 500 or (M_arr.ndim > 1 and M_arr.shape[1] > 500)):
-            raise ValueError("M matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("M matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
         if not np.isfinite(M_arr).all():
-            raise ValueError("M must contain only finite numbers.") from None
+            raise ValueError("M must contain only finite numbers.")
 
         # ⚡ Bolt Optimization: Fast singular value calculation for SIMO and MISO systems
         # Bypasses the expensive O(N^3) SVD computation when the matrix is a vector.
@@ -518,20 +521,23 @@ def small_gain_theorem_check(M, Delta, omega=None):
     else:
         try:
             Delta_arr = np.asarray(Delta)
-            # Security: Prevent silent data truncation. Explicitly check for complex inputs
-            # before casting to avoid dropping imaginary components and returning invalid safety margins.
-            if np.iscomplexobj(Delta_arr):
-                Delta_arr = Delta_arr.astype(complex)
-            else:
-                Delta_arr = Delta_arr.astype(float)
         except (ValueError, TypeError):
             raise ValueError("Delta must be a control system or a numeric matrix/scalar.") from None
+        # Security: Prevent silent data truncation. Explicitly check for complex inputs
+        # before casting to avoid dropping imaginary components and returning invalid safety margins.
+        if np.iscomplexobj(Delta_arr):
+            Delta_arr = Delta_arr.astype(complex)
+        else:
+            try:
+                Delta_arr = Delta_arr.astype(float)
+            except (ValueError, TypeError):
+                raise ValueError("Delta must be a control system or a numeric matrix/scalar.") from None
         if Delta_arr.ndim > 2:
-            raise ValueError("Delta must be a 1D or 2D array.") from None
+            raise ValueError("Delta must be a 1D or 2D array.")
         if Delta_arr.ndim > 0 and (Delta_arr.shape[0] > 500 or (Delta_arr.ndim > 1 and Delta_arr.shape[1] > 500)):
-            raise ValueError("Delta matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.") from None
+            raise ValueError("Delta matrix dimensions are too large (exceeds maximum allowed 500) and would cause resource exhaustion.")
         if not np.isfinite(Delta_arr).all():
-            raise ValueError("Delta must contain only finite numbers.") from None
+            raise ValueError("Delta must contain only finite numbers.")
         # ⚡ Bolt Optimization: Replace slow np.max(np.abs(Delta_arr)) with explicit max magnitude calculation to avoid redundant sqrt
         norm_Delta = np.sqrt(np.max(Delta_arr.real**2 + Delta_arr.imag**2))
 
