@@ -324,7 +324,9 @@ def calculate_hinf_norm(sys, omega=None):
                     resp_T += sys.D
 
             if sys.ninputs == 1 or sys.noutputs == 1:
-                max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
+                # ⚡ Bolt Optimization: Fast maximum singular value for vectors.
+                # Bypasses O(N) redundant sqrt calculations by pulling np.sqrt outside of np.max.
+                max_sv = np.sqrt(np.max(np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))))
             elif sys.ninputs == 2 and sys.noutputs == 2:
                 # ⚡ Bolt Optimization: Fast analytic maximum singular value for 2x2 MIMO systems
                 c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
@@ -387,7 +389,9 @@ def calculate_hinf_norm(sys, omega=None):
             else:
                 resp_T = np.transpose(resp, (2, 0, 1))
                 if sys.ninputs == 1 or sys.noutputs == 1:
-                    max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
+                    # ⚡ Bolt Optimization: Fast maximum singular value for vectors.
+                    # Bypasses O(N) redundant sqrt calculations by pulling np.sqrt outside of np.max.
+                    max_sv = np.sqrt(np.max(np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))))
                 elif sys.ninputs == 2 and sys.noutputs == 2:
                     c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
                     c10, c11 = resp_T[:, 1, 0], resp_T[:, 1, 1]
@@ -449,7 +453,9 @@ def calculate_hinf_norm(sys, omega=None):
             # Transpose to (frequencies, outputs, inputs) for batched svd
             resp_T = np.transpose(resp, (2, 0, 1))
             if sys.ninputs == 1 or sys.noutputs == 1:
-                max_sv = np.max(np.linalg.norm(resp_T, axis=(1, 2)))
+                # ⚡ Bolt Optimization: Fast maximum singular value for vectors.
+                # Bypasses O(N) redundant sqrt calculations by pulling np.sqrt outside of np.max.
+                max_sv = np.sqrt(np.max(np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))))
             elif sys.ninputs == 2 and sys.noutputs == 2:
                 c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
                 c10, c11 = resp_T[:, 1, 0], resp_T[:, 1, 1]
