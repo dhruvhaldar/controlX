@@ -183,7 +183,9 @@ def calculate_singular_values(sys, omega=0):
                     resp_T += sys.D
 
             if sys.ninputs == 1 or sys.noutputs == 1:
-                S = np.linalg.norm(resp_T, axis=(1, 2)).reshape(-1, 1)
+                # ⚡ Bolt Optimization: Fast Frobenius norm for vectors.
+                # Avoids general-purpose SVD overhead and computes squared magnitude directly.
+                S = np.sqrt(np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))).reshape(-1, 1)
             elif sys.ninputs == 2 and sys.noutputs == 2:
                 # ⚡ Bolt Optimization: Fast analytic SVD for 2x2 MIMO systems
                 c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
@@ -248,7 +250,9 @@ def calculate_singular_values(sys, omega=0):
             else:
                 resp_T = np.transpose(resp, (2, 0, 1))
                 if sys.ninputs == 1 or sys.noutputs == 1:
-                    S = np.linalg.norm(resp_T, axis=(1, 2)).reshape(-1, 1)
+                    # ⚡ Bolt Optimization: Fast Frobenius norm for vectors.
+                    # Avoids general-purpose SVD overhead and computes squared magnitude directly.
+                    S = np.sqrt(np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))).reshape(-1, 1)
                 elif sys.ninputs == 2 and sys.noutputs == 2:
                     c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
                     c10, c11 = resp_T[:, 1, 0], resp_T[:, 1, 1]
@@ -313,7 +317,9 @@ def calculate_singular_values(sys, omega=0):
             # Transpose to (frequencies, outputs, inputs) for batched svd
             resp_T = np.transpose(resp, (2, 0, 1))
             if sys.ninputs == 1 or sys.noutputs == 1:
-                S = np.linalg.norm(resp_T, axis=(1, 2)).reshape(-1, 1)
+                # ⚡ Bolt Optimization: Fast Frobenius norm for vectors.
+                # Avoids general-purpose SVD overhead and computes squared magnitude directly.
+                S = np.sqrt(np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))).reshape(-1, 1)
             elif sys.ninputs == 2 and sys.noutputs == 2:
                 c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
                 c10, c11 = resp_T[:, 1, 0], resp_T[:, 1, 1]
