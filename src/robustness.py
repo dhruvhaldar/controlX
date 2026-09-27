@@ -337,7 +337,8 @@ def calculate_hinf_norm(sys, omega=None):
                 D = det.real**2 + det.imag**2
                 discriminant = np.maximum(T**2 - 4*D, 0)
                 sqrt_disc = np.sqrt(discriminant)
-                max_sv = np.max(np.sqrt((T + sqrt_disc) / 2))
+                # ⚡ Bolt Optimization: Pull np.sqrt outside of np.max to avoid O(N) redundant square root calculations
+                max_sv = np.sqrt(np.max(T + sqrt_disc) / 2)
             else:
                 try:
                     svs = np.linalg.svd(resp_T, compute_uv=False)
@@ -401,7 +402,8 @@ def calculate_hinf_norm(sys, omega=None):
                     D = det.real**2 + det.imag**2
                     discriminant = np.maximum(T**2 - 4*D, 0)
                     sqrt_disc = np.sqrt(discriminant)
-                    max_sv = np.max(np.sqrt((T + sqrt_disc) / 2))
+                    # ⚡ Bolt Optimization: Pull np.sqrt outside of np.max to avoid O(N) redundant square root calculations
+                    max_sv = np.sqrt(np.max(T + sqrt_disc) / 2)
                 else:
                     try:
                         svs = np.linalg.svd(resp_T, compute_uv=False)
@@ -465,7 +467,8 @@ def calculate_hinf_norm(sys, omega=None):
                 D = det.real**2 + det.imag**2
                 discriminant = np.maximum(T**2 - 4*D, 0)
                 sqrt_disc = np.sqrt(discriminant)
-                max_sv = np.max(np.sqrt((T + sqrt_disc) / 2))
+                # ⚡ Bolt Optimization: Pull np.sqrt outside of np.max to avoid O(N) redundant square root calculations
+                max_sv = np.sqrt(np.max(T + sqrt_disc) / 2)
             else:
                 try:
                     svs = np.linalg.svd(resp_T, compute_uv=False)
