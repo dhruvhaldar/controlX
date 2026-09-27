@@ -136,76 +136,81 @@ def calculate_singular_values(sys, omega=0):
             s = np.exp(1j * omega_arr * sys.dt)
 
         try:
-            # ⚡ Bolt Optimization: Fast Frequency Response Evaluation via Spectral Decomposition
-            # Replaces the O(N^3) batched matrix solve with an O(N) scalar division over frequencies.
-            # This provides a ~2.5x speedup for typical small systems and scales much better.
-            eigvals, V = np.linalg.eig(sys.A)
-
-            # Check condition number to ensure stable diagonalization
-            # ⚡ Bolt Optimization: Use 1-norm for condition number, which avoids a slow SVD.
-            # Reuse the explicit inverse for both the condition number check and the multiplication.
             try:
-                invV = np.linalg.inv(V)
-                cond_V = np.linalg.norm(V, 1) * np.linalg.norm(invV, 1)
-            except np.linalg.LinAlgError:
-                cond_V = np.inf
+                # ⚡ Bolt Optimization: Fast Frequency Response Evaluation via Spectral Decomposition
+                # Replaces the O(N^3) batched matrix solve with an O(N) scalar division over frequencies.
+                # This provides a ~2.5x speedup for typical small systems and scales much better.
+                eigvals, V = np.linalg.eig(sys.A)
 
-            if cond_V < 1e10:
-                CV = sys.C @ V
-                invVB = invV @ sys.B
-                s_minus_eig = s[:, np.newaxis] - eigvals
-                # ⚡ Bolt Optimization: Compute reciprocal in-place to avoid allocating a new complex array
-                np.reciprocal(s_minus_eig, out=s_minus_eig)
-                inv_s_minus_eig = s_minus_eig
-                # ⚡ Bolt Optimization: Use matmul with reshaped flat arrays instead of batched matmul.
-                # Factoring R = CV[:, None, :] * invVB.T[None, :, :] and reshaping avoids the O(F * O * I * N)
-                # broadcasted matmul, replacing it with an O(F * N * (O*I)) matmul (inv_s_minus_eig @ R_flat.T).
-                # This provides an additional 4-12x speedup over the broadcasted batched matmul approach.
-                R = CV[:, np.newaxis, :] * invVB.T[np.newaxis, :, :]
-                R_flat = R.reshape(sys.noutputs * sys.ninputs, sys.nstates)
-                resp_flat = inv_s_minus_eig @ R_flat.T
-                resp_T = resp_flat.reshape(len(omega_arr), sys.noutputs, sys.ninputs)
-                if np.any(sys.D):
-                    # ⚡ Bolt Optimization: In-place addition to avoid allocating a large batched matrix
-                    resp_T += sys.D
-            else:
-                # Fallback for non-diagonalizable matrices
-                sI_minus_A = np.empty((len(omega_arr), sys.nstates, sys.nstates), dtype=complex)
-                sI_minus_A[...] = -sys.A
-                # ⚡ Bolt Optimization: Use flat view indexing instead of advanced indexing for diagonal addition
-                # This avoids allocating index arrays and provides a ~20% speedup for batched diagonal additions.
-                sI_minus_A.reshape(len(omega_arr), -1)[:, ::sys.nstates + 1] += s[:, np.newaxis]
-                # ⚡ Bolt Optimization: Use np.linalg.solve native broadcasting for sys.B instead of np.broadcast_to
-                X = np.linalg.solve(sI_minus_A, sys.B)
-                resp_T = sys.C @ X
-                if np.any(sys.D):
-                    # ⚡ Bolt Optimization: In-place addition to avoid allocating a large batched matrix
-                    resp_T += sys.D
-
-            if sys.ninputs == 1 or sys.noutputs == 1:
-                # ⚡ Bolt Optimization: Fast Frobenius norm for vectors.
-                # Avoids general-purpose SVD overhead and computes squared magnitude directly.
-                S = np.sqrt(np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))).reshape(-1, 1)
-            elif sys.ninputs == 2 and sys.noutputs == 2:
-                # ⚡ Bolt Optimization: Fast analytic SVD for 2x2 MIMO systems
-                c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
-                c10, c11 = resp_T[:, 1, 0], resp_T[:, 1, 1]
-                T = (c00.real**2 + c00.imag**2 + c01.real**2 + c01.imag**2 +
-                     c10.real**2 + c10.imag**2 + c11.real**2 + c11.imag**2)
-                det = c00 * c11 - c01 * c10
-                D = det.real**2 + det.imag**2
-                discriminant = np.maximum(T**2 - 4*D, 0)
-                sqrt_disc = np.sqrt(discriminant)
-                sv1 = np.sqrt((T + sqrt_disc) / 2)
-                sv2 = np.sqrt((T - sqrt_disc) / 2)
-                S = np.column_stack((sv1, sv2))
-            else:
+                # Check condition number to ensure stable diagonalization
+                # ⚡ Bolt Optimization: Use 1-norm for condition number, which avoids a slow SVD.
+                # Reuse the explicit inverse for both the condition number check and the multiplication.
                 try:
-                    S = np.linalg.svd(resp_T, compute_uv=False)
+                    invV = np.linalg.inv(V)
+                    cond_V = np.linalg.norm(V, 1) * np.linalg.norm(invV, 1)
                 except np.linalg.LinAlgError:
-                    raise
-                except Exception:
-                    raise ValueError("Failed to calculate singular values: System resulted in invalid matrices.") from None
+                    cond_V = np.inf
+
+                if cond_V < 1e10:
+                    CV = sys.C @ V
+                    invVB = invV @ sys.B
+                    s_minus_eig = s[:, np.newaxis] - eigvals
+                    # ⚡ Bolt Optimization: Compute reciprocal in-place to avoid allocating a new complex array
+                    np.reciprocal(s_minus_eig, out=s_minus_eig)
+                    inv_s_minus_eig = s_minus_eig
+                    # ⚡ Bolt Optimization: Use matmul with reshaped flat arrays instead of batched matmul.
+                    # Factoring R = CV[:, None, :] * invVB.T[None, :, :] and reshaping avoids the O(F * O * I * N)
+                    # broadcasted matmul, replacing it with an O(F * N * (O*I)) matmul (inv_s_minus_eig @ R_flat.T).
+                    # This provides an additional 4-12x speedup over the broadcasted batched matmul approach.
+                    R = CV[:, np.newaxis, :] * invVB.T[np.newaxis, :, :]
+                    R_flat = R.reshape(sys.noutputs * sys.ninputs, sys.nstates)
+                    resp_flat = inv_s_minus_eig @ R_flat.T
+                    resp_T = resp_flat.reshape(len(omega_arr), sys.noutputs, sys.ninputs)
+                    if np.any(sys.D):
+                        # ⚡ Bolt Optimization: In-place addition to avoid allocating a large batched matrix
+                        resp_T += sys.D
+                else:
+                    # Fallback for non-diagonalizable matrices
+                    sI_minus_A = np.empty((len(omega_arr), sys.nstates, sys.nstates), dtype=complex)
+                    sI_minus_A[...] = -sys.A
+                    # ⚡ Bolt Optimization: Use flat view indexing instead of advanced indexing for diagonal addition
+                    # This avoids allocating index arrays and provides a ~20% speedup for batched diagonal additions.
+                    sI_minus_A.reshape(len(omega_arr), -1)[:, ::sys.nstates + 1] += s[:, np.newaxis]
+                    # ⚡ Bolt Optimization: Use np.linalg.solve native broadcasting for sys.B instead of np.broadcast_to
+                    X = np.linalg.solve(sI_minus_A, sys.B)
+                    resp_T = sys.C @ X
+                    if np.any(sys.D):
+                        # ⚡ Bolt Optimization: In-place addition to avoid allocating a large batched matrix
+                        resp_T += sys.D
+
+                if sys.ninputs == 1 or sys.noutputs == 1:
+                    # ⚡ Bolt Optimization: Fast Frobenius norm for vectors.
+                    # Avoids general-purpose SVD overhead and computes squared magnitude directly.
+                    S = np.sqrt(np.sum(resp_T.real**2 + resp_T.imag**2, axis=(1, 2))).reshape(-1, 1)
+                elif sys.ninputs == 2 and sys.noutputs == 2:
+                    # ⚡ Bolt Optimization: Fast analytic SVD for 2x2 MIMO systems
+                    c00, c01 = resp_T[:, 0, 0], resp_T[:, 0, 1]
+                    c10, c11 = resp_T[:, 1, 0], resp_T[:, 1, 1]
+                    T = (c00.real**2 + c00.imag**2 + c01.real**2 + c01.imag**2 +
+                         c10.real**2 + c10.imag**2 + c11.real**2 + c11.imag**2)
+                    det = c00 * c11 - c01 * c10
+                    D = det.real**2 + det.imag**2
+                    discriminant = np.maximum(T**2 - 4*D, 0)
+                    sqrt_disc = np.sqrt(discriminant)
+                    sv1 = np.sqrt((T + sqrt_disc) / 2)
+                    sv2 = np.sqrt((T - sqrt_disc) / 2)
+                    S = np.column_stack((sv1, sv2))
+                else:
+                    try:
+                        S = np.linalg.svd(resp_T, compute_uv=False)
+                    except np.linalg.LinAlgError:
+                        raise
+                    except Exception:
+                        raise ValueError("Failed to calculate singular values: System resulted in invalid matrices.") from None
+            except np.linalg.LinAlgError:
+                raise
+            except Exception:
+                raise ValueError("Failed to evaluate system matrices: Matrices are invalid.") from None
         except np.linalg.LinAlgError:
             # Fallback for pole collision
             try:
@@ -461,19 +466,24 @@ def system_gain(sys, omega=0):
     if isinstance(sys, ct.StateSpace):
         if omega_val == 0.0:
             try:
-                # ⚡ Bolt Optimization: Fast path for steady-state gain (omega=0).
-                # Bypasses complex arithmetic overhead by using real arithmetic for s=0 (continuous)
-                # or s=1 (discrete), yielding a nearly 2x speedup.
-                if sys.dt is None or sys.dt == 0:
-                    sI_minus_A = -sys.A
-                else:
-                    sI_minus_A = -sys.A
-                    sI_minus_A.flat[::sys.nstates + 1] += 1.0
+                try:
+                    # ⚡ Bolt Optimization: Fast path for steady-state gain (omega=0).
+                    # Bypasses complex arithmetic overhead by using real arithmetic for s=0 (continuous)
+                    # or s=1 (discrete), yielding a nearly 2x speedup.
+                    if sys.dt is None or sys.dt == 0:
+                        sI_minus_A = -sys.A
+                    else:
+                        sI_minus_A = -sys.A
+                        sI_minus_A.flat[::sys.nstates + 1] += 1.0
 
-                res = sys.C @ np.linalg.solve(sI_minus_A, sys.B) + sys.D
-                if sys.ninputs == 1 and sys.noutputs == 1:
-                    return res[0, 0]
-                return res
+                    res = sys.C @ np.linalg.solve(sI_minus_A, sys.B) + sys.D
+                    if sys.ninputs == 1 and sys.noutputs == 1:
+                        return res[0, 0]
+                    return res
+                except np.linalg.LinAlgError:
+                    raise
+                except Exception:
+                    raise ValueError("Failed to compute system gain: Matrices are invalid.") from None
             except np.linalg.LinAlgError:
                 res = np.full((sys.noutputs, sys.ninputs), np.nan)
                 if sys.ninputs == 1 and sys.noutputs == 1:
@@ -482,16 +492,21 @@ def system_gain(sys, omega=0):
 
         s = omega_val * 1j
         try:
-            # ⚡ Bolt Optimization: Faster array initialization for sI_minus_A.
-            # Bypasses the intermediate array allocation and casting overhead of `-sys.A.astype(complex)`
-            # by allocating an uninitialized complex array and copying the values, yielding a ~40% speedup.
-            sI_minus_A = np.empty_like(sys.A, dtype=complex)
-            sI_minus_A[...] = -sys.A
-            sI_minus_A.flat[::sys.nstates + 1] += s
-            res = sys.C @ np.linalg.solve(sI_minus_A, sys.B) + sys.D
-            if sys.ninputs == 1 and sys.noutputs == 1:
-                return res[0, 0]
-            return res
+            try:
+                # ⚡ Bolt Optimization: Faster array initialization for sI_minus_A.
+                # Bypasses the intermediate array allocation and casting overhead of `-sys.A.astype(complex)`
+                # by allocating an uninitialized complex array and copying the values, yielding a ~40% speedup.
+                sI_minus_A = np.empty_like(sys.A, dtype=complex)
+                sI_minus_A[...] = -sys.A
+                sI_minus_A.flat[::sys.nstates + 1] += s
+                res = sys.C @ np.linalg.solve(sI_minus_A, sys.B) + sys.D
+                if sys.ninputs == 1 and sys.noutputs == 1:
+                    return res[0, 0]
+                return res
+            except np.linalg.LinAlgError:
+                raise
+            except Exception:
+                raise ValueError("Failed to compute system gain: Matrices are invalid.") from None
         except np.linalg.LinAlgError:
             res = np.full((sys.noutputs, sys.ninputs), np.nan, dtype=complex)
             if sys.ninputs == 1 and sys.noutputs == 1:
