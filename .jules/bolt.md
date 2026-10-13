@@ -169,3 +169,6 @@
 ## 2026-12-19 - Pulling np.sqrt outside of np.max
 **Learning:** When finding the maximum value of a positively monotonic transformation of an array (such as `np.sqrt` or `np.log` where the function preserves order), calculating the transformation on the entire array first and then taking the maximum (`np.max(np.sqrt(x))`) results in O(N) redundant calculations.
 **Action:** Move the monotonic transformation outside of the aggregation function (`np.sqrt(np.max(x))`) so the expensive transformation is evaluated only once on a single scalar value.
+## 2026-12-20 - Fast Zeros Calculation via Schur Complement
+**Learning:** Calculating the zeros of a multivariable system by solving the generalized eigenvalue problem `scipy.linalg.eigvals([A B; C D], [I 0; 0 0])` is an O((N+M)^3) operation and can be slow. When the system is square and the feedthrough matrix `D` is invertible, the zeros are exactly the standard eigenvalues of the Schur complement `A - B D^-1 C`.
+**Action:** When computing the zeros of a square `StateSpace` model, use a `try...except` block to attempt calculating `np.linalg.eigvals(sys.A - sys.B @ np.linalg.inv(sys.D) @ sys.C)`. If it succeeds, it reduces the complexity to an O(N^3) standard eigenvalue problem, providing a significant speedup. If it fails with `np.linalg.LinAlgError`, fall back to the generalized eigenvalue method.
