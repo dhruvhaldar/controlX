@@ -68,19 +68,27 @@ def calculate_zeros(sys):
         # bypasses the control library's validation and object creation overhead,
         # providing a ~3x speedup.
         if isinstance(sys, ct.StateSpace) and sys.ninputs == sys.noutputs:
-            import scipy.linalg
-            n, m = sys.nstates, sys.ninputs
-            M1 = np.empty((n + m, n + m))
-            M1[:n, :n] = sys.A
-            M1[:n, n:] = sys.B
-            M1[n:, :n] = sys.C
-            M1[n:, n:] = sys.D
+            try:
+                # ⚡ Bolt Optimization: Fast path for zeros via Schur complement.
+                # If D is invertible, the zeros are the standard eigenvalues of A - B D^-1 C.
+                # This reduces an O((N+M)^3) generalized eigenvalue problem to an O(N^3) standard one.
+                invD = np.linalg.inv(sys.D)
+                A_tilde = sys.A - sys.B @ invD @ sys.C
+                return np.linalg.eigvals(A_tilde)
+            except np.linalg.LinAlgError:
+                import scipy.linalg
+                n, m = sys.nstates, sys.ninputs
+                M1 = np.empty((n + m, n + m))
+                M1[:n, :n] = sys.A
+                M1[:n, n:] = sys.B
+                M1[n:, :n] = sys.C
+                M1[n:, n:] = sys.D
 
-            M2 = np.zeros((n + m, n + m))
-            M2.flat[:n*(n+m+1):n+m+1] = 1.0
+                M2 = np.zeros((n + m, n + m))
+                M2.flat[:n*(n+m+1):n+m+1] = 1.0
 
-            eigenvalues = scipy.linalg.eigvals(M1, M2)
-            return eigenvalues[np.isfinite(eigenvalues)]
+                eigenvalues = scipy.linalg.eigvals(M1, M2)
+                return eigenvalues[np.isfinite(eigenvalues)]
 
         return ct.zeros(sys)
     except Exception:
