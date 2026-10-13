@@ -181,3 +181,8 @@
 **Vulnerability:** Weak input validation swallowed and leaked incorrect exceptions for complex inequality bounds and optimization variables.
 **Learning:** `try...except ValueError` blocks that wrap `np.iscomplexobj` checks with `raise ValueError(...)` cause the custom validation messages to be caught immediately by the surrounding handler, preventing the targeted error messages from functioning correctly and leaking downstream optimization solver exceptions instead.
 **Prevention:** Move input type checking (like `np.iscomplexobj` and its associated `raise ValueError`) strictly outside of broad `try...except (TypeError, ValueError)` typecasting blocks.
+
+## 2026-07-02 - Exception chaining leakage when raising custom exceptions
+**Vulnerability:** Many custom validation `ValueError` exceptions raised inside `except` blocks in `mpc.py`, `analysis.py`, `robustness.py` and `synthesis.py` did not use `from None`. This inadvertently allowed the original underlying exception tracebacks to leak to the user (exception chaining), exposing framework-level details.
+**Learning:** In Python 3, exceptions raised inside `except` blocks automatically include the context of the original exception unless suppressed. This defeats the purpose of wrapping exceptions for security if `from None` is omitted.
+**Prevention:** Always use `raise ValueError(...) from None` when raising custom exceptions within `except` blocks to prevent implicit exception chaining and ensure complete exception masking.

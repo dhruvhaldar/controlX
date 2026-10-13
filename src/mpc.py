@@ -16,7 +16,7 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
         raise ValueError(f"{name} must be a numeric array.") from None
 
     if np.iscomplexobj(matrix):
-        raise ValueError(f"{name} cannot be complex.")
+        raise ValueError(f"{name} cannot be complex.") from None
 
     try:
         matrix = matrix.astype(float)
@@ -25,15 +25,15 @@ def _validate_matrix(matrix, expected_shape=None, name="Matrix"):
 
     matrix = np.atleast_2d(matrix)
     if matrix.ndim > 2:
-        raise ValueError(f"{name} must be a 1D or 2D array.")
+        raise ValueError(f"{name} must be a 1D or 2D array.") from None
     if not np.isfinite(matrix).all():
-        raise ValueError(f"{name} must contain only finite numbers.")
+        raise ValueError(f"{name} must contain only finite numbers.") from None
     if matrix.shape[0] != matrix.shape[1]:
-        raise ValueError(f"{name} must be a square matrix.")
+        raise ValueError(f"{name} must be a square matrix.") from None
     if expected_shape is not None and matrix.shape != expected_shape:
-        raise ValueError(f"{name} must have shape {expected_shape}.")
+        raise ValueError(f"{name} must have shape {expected_shape}.") from None
     if not np.allclose(matrix, matrix.T):
-        raise ValueError(f"{name} must be symmetric.")
+        raise ValueError(f"{name} must be symmetric.") from None
 
     # ⚡ Bolt Optimization: Fast positive semi-definite check via Cholesky decomposition.
     # np.linalg.cholesky is O(N^3/3), while np.linalg.eigvalsh is O(4N^3/3),
@@ -91,12 +91,12 @@ class MPCController:
 
         # Security: Input validation to prevent resource exhaustion
         if not isinstance(N, int) or N <= 0:
-            raise ValueError("Prediction horizon N must be a positive integer")
+            raise ValueError("Prediction horizon N must be a positive integer") from None
         if N > 10000:
-            raise ValueError("Prediction horizon N is too large (exceeds maximum allowed 10000) and would cause resource exhaustion.")
+            raise ValueError("Prediction horizon N is too large (exceeds maximum allowed 10000) and would cause resource exhaustion.") from None
 
         if sys.nstates > 500 or sys.ninputs > 500:
-            raise ValueError("System dimensions are too large (exceeds maximum allowed 500 states/inputs) and would cause resource exhaustion.")
+            raise ValueError("System dimensions are too large (exceeds maximum allowed 500 states/inputs) and would cause resource exhaustion.") from None
 
         try:
             dt_float = float(dt)
@@ -104,10 +104,10 @@ class MPCController:
             raise ValueError("Sampling time dt must be a positive number.") from None
 
         if not np.isfinite(dt_float):
-            raise ValueError("Sampling time dt must be finite.")
+            raise ValueError("Sampling time dt must be finite.") from None
 
         if dt_float <= 0:
-            raise ValueError("Sampling time dt must be positive")
+            raise ValueError("Sampling time dt must be positive") from None
 
         self.dt = dt_float
         self.N = N
@@ -129,7 +129,7 @@ class MPCController:
                     raise ValueError(f"Constraint {key} must be numeric.") from None
 
                 if np.iscomplexobj(val):
-                    raise ValueError(f"Constraint {key} cannot be complex.")
+                    raise ValueError(f"Constraint {key} cannot be complex.") from None
 
                 try:
                     val = val.astype(float)
@@ -137,9 +137,9 @@ class MPCController:
                     raise ValueError(f"Constraint {key} must be numeric.") from None
 
                 if not np.isfinite(val).all():
-                    raise ValueError(f"Constraint {key} must contain only finite numbers.")
+                    raise ValueError(f"Constraint {key} must contain only finite numbers.") from None
                 if val.ndim > 1 or (val.ndim == 1 and val.shape[0] != self.n_u and val.shape[0] != 1):
-                    raise ValueError(f"Constraint {key} has invalid shape.")
+                    raise ValueError(f"Constraint {key} has invalid shape.") from None
                 self.constraints[key] = val
 
         for key in ['xmin', 'xmax']:
@@ -150,7 +150,7 @@ class MPCController:
                     raise ValueError(f"Constraint {key} must be numeric.") from None
 
                 if np.iscomplexobj(val):
-                    raise ValueError(f"Constraint {key} cannot be complex.")
+                    raise ValueError(f"Constraint {key} cannot be complex.") from None
 
                 try:
                     val = val.astype(float)
@@ -158,9 +158,9 @@ class MPCController:
                     raise ValueError(f"Constraint {key} must be numeric.") from None
 
                 if not np.isfinite(val).all():
-                    raise ValueError(f"Constraint {key} must contain only finite numbers.")
+                    raise ValueError(f"Constraint {key} must contain only finite numbers.") from None
                 if val.ndim > 1 or (val.ndim == 1 and val.shape[0] != self.n_x and val.shape[0] != 1):
-                    raise ValueError(f"Constraint {key} has invalid shape.")
+                    raise ValueError(f"Constraint {key} has invalid shape.") from None
                 self.constraints[key] = val
 
         # Discretize system if continuous
