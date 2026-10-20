@@ -176,3 +176,6 @@
 ## 2026-12-21 - Fast array initialization in loop iterations
 **Learning:** In ControlX, when calculating complex responses over frequency arrays (e.g. evaluating polynomials via Horner's method), allocating an array initialized to zeros via `np.zeros_like(s, dtype=complex)` at the beginning of each calculation is slower than simply initializing the accumulator to `0j`. Using `0j` allows NumPy's broadcast promotion rules to handle the conversion to a complex array automatically upon the first operation (`0j * s + c`), which avoids the overhead of repeated array allocation.
 **Action:** When accumulating values into a complex array inside a loop using an operation that promotes the scalar to an array (like multiplication with an existing array), initialize the accumulator using `0j` instead of `np.zeros_like(s, dtype=complex)`.
+## 2024-05-23 - Fast Complementary Sensitivity Function
+**Learning:** For complementary sensitivity functions where $T = L(I+L)^{-1}$, computing the feedthrough matrix mathematically equates to $D_T = D_L (I + D_L)^{-1}$. This contains a matrix inversion $O(N^3)$ and a matrix multiplication $O(N^3)$.
+**Action:** Use the identity $D_T = I - (I + D_L)^{-1}$ to bypass the $O(N^3)$ matrix multiplication. Implementation: `np.eye(p1) - inv_I_plus_D`.

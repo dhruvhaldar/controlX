@@ -210,7 +210,10 @@ def complementary_sensitivity_function(G, K):
             A_T = A_L - B_L @ inv_I_plus_D_C
             B_T = B_L @ inv_I_plus_D
             C_T = inv_I_plus_D_C
-            D_T = D_L @ inv_I_plus_D
+            # ⚡ Bolt Optimization: Fast computation of D_T.
+            # D_T = D_L (I + D_L)^-1 = I - (I + D_L)^-1
+            # Bypasses an O(N^3) matrix multiplication.
+            D_T = np.eye(p1) - inv_I_plus_D
 
         return ct.ss(A_T, B_T, C_T, D_T, G.dt)
 
