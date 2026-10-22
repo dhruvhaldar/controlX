@@ -485,12 +485,14 @@ def system_gain(sys, omega=0):
                 # Bypasses complex arithmetic overhead by using real arithmetic for s=0 (continuous)
                 # or s=1 (discrete), yielding a nearly 2x speedup.
                 if sys.dt is None or sys.dt == 0:
-                    sI_minus_A = -sys.A
+                    # ⚡ Bolt Optimization: Avoid O(N^2) memory allocation of `-sys.A`
+                    # Mathematically equivalent to `sys.C @ np.linalg.solve(-sys.A, sys.B) + sys.D`
+                    res = sys.D - sys.C @ np.linalg.solve(sys.A, sys.B)
                 else:
                     sI_minus_A = -sys.A
                     sI_minus_A.flat[::sys.nstates + 1] += 1.0
+                    res = sys.C @ np.linalg.solve(sI_minus_A, sys.B) + sys.D
 
-                res = sys.C @ np.linalg.solve(sI_minus_A, sys.B) + sys.D
                 if sys.ninputs == 1 and sys.noutputs == 1:
                     return res[0, 0]
                 return res
