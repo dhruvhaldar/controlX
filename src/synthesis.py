@@ -261,7 +261,7 @@ def design_lqg(sys, Q, R, Qn, Rn, G=None):
     if not np.any(D):
         Ac = A - B @ K - L @ C
     else:
-        Ac = A - B @ K - L @ C + L @ D @ K
+        Ac = A - B @ K - L @ (C - D @ K)
 
     Bc = L
     Cc = -K
