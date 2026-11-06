@@ -183,3 +183,7 @@
 ## 2026-12-22 - Avoid redundant memory allocation of `-sys.A` in steady-state gain
 **Learning:** When evaluating the steady-state system gain (`omega=0`) for a continuous `StateSpace` model, creating a new matrix for `-sys.A` introduces unnecessary $O(N^2)$ memory allocation and copying. Instead, the expression `sys.C @ np.linalg.solve(-sys.A, sys.B) + sys.D` can be rewritten mathematically as `sys.D - sys.C @ np.linalg.solve(sys.A, sys.B)`.
 **Action:** Use `res = sys.D - sys.C @ np.linalg.solve(sys.A, sys.B)` instead of allocating a negated array for `sys.A` to achieve speedups and memory savings.
+
+## 2024-06-25 - Factorize Ac matrix calculation in LQG to avoid O(N^3) complexity
+**Learning:** In ControlX, when computing the closed-loop matrix `Ac` for an LQG controller in `design_lqg`, the equation `Ac = A - B @ K - L @ C + L @ D @ K` contains an expensive $O(N^3)$ matrix multiplication `L @ D @ K`.
+**Action:** Factor the equation into `Ac = A - B @ K - L @ (C - D @ K)`. This bypasses the expensive multiplication and achieves significant performance speedups.
