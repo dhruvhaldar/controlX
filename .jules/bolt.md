@@ -183,3 +183,7 @@
 ## 2026-12-22 - Avoid redundant memory allocation of `-sys.A` in steady-state gain
 **Learning:** When evaluating the steady-state system gain (`omega=0`) for a continuous `StateSpace` model, creating a new matrix for `-sys.A` introduces unnecessary $O(N^2)$ memory allocation and copying. Instead, the expression `sys.C @ np.linalg.solve(-sys.A, sys.B) + sys.D` can be rewritten mathematically as `sys.D - sys.C @ np.linalg.solve(sys.A, sys.B)`.
 **Action:** Use `res = sys.D - sys.C @ np.linalg.solve(sys.A, sys.B)` instead of allocating a negated array for `sys.A` to achieve speedups and memory savings.
+
+## 2026-12-23 - Factoring Closed-Loop Matrix Computation
+**Learning:** In ControlX, when computing the closed-loop matrix `Ac` for an LQG controller in `design_lqg`, the expression `Ac = A - B @ K - L @ C + L @ D @ K` contains two expensive matrix multiplications. By factoring the equation into `Ac = A - B @ K - L @ (C - D @ K)`, we eliminate one of the matrix multiplications, bypassing an expensive O(N^3) operation (`L @ D @ K`) and achieving significant performance speedups.
+**Action:** When evaluating the closed-loop matrix with full state feedback and a Kalman filter, mathematically factor common multiplier matrices to reduce the total number of operations from sum-of-products to products-of-sums (e.g., `L @ C - L @ D @ K` -> `L @ (C - D @ K)`).

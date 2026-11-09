@@ -261,7 +261,10 @@ def design_lqg(sys, Q, R, Qn, Rn, G=None):
     if not np.any(D):
         Ac = A - B @ K - L @ C
     else:
-        Ac = A - B @ K - L @ C + L @ D @ K
+        # ⚡ Bolt Optimization: Factor L @ D @ K into L @ (C - D @ K)
+        # Bypasses an expensive O(N^3) matrix multiplication (L @ D @ K)
+        # since C - D @ K is just a matrix subtraction before multiplying by L.
+        Ac = A - B @ K - L @ (C - D @ K)
 
     Bc = L
     Cc = -K
